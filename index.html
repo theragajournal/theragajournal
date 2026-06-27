@@ -1,333 +1,236 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Raga Journal</title>
-    <!-- Google Fonts: Roboto and Roboto Serif for that classic news feel -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Serif:opsz,wght@8..144,400;8..144,700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <style>
-        /* --- WSJ Inspired Editorial Styling --- */
-        :root {
-            --paper-white: #fbfbf9;
-            --ink-black: #111111;
-            --wsj-accent: #333333;
-            --border-color: #dcdddd;
-            --line-thick: 3px;
-            --line-thin: 1px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Raga Journal</title>
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 
-        body {
-            background-color: var(--paper-white);
-            color: var(--ink-black);
-            font-family: 'Roboto', sans-serif;
-            padding: 0 20px;
-            -webkit-font-smoothing: antialiased;
-        }
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-        .container {
-            max-width: 1260px;
-            margin: 0 auto;
-        }
+body{
+    background:#faf8f5;
+    color:#1f1f1f;
+    font-family:Inter,sans-serif;
+    line-height:1.8;
+    -webkit-font-smoothing:antialiased;
+}
 
-        /* --- Header & Masthead --- */
-        header {
-            text-align: center;
-            padding: 15px 0 5px 0;
-        }
+.container{
+    width:min(92%,760px);
+    margin:auto;
+}
 
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: var(--line-thin) solid var(--border-color);
-            padding-bottom: 8px;
-            margin-bottom: 15px;
-        }
+header{
+    padding:70px 0 50px;
+    text-align:center;
+}
 
-        .masthead {
-            font-family: 'Roboto Serif', serif;
-            font-weight: 700;
-            font-size: 52px;
-            letter-spacing: -1px;
-            text-transform: none;
-            margin: 10px 0;
-            line-height: 1;
-        }
+.logo{
+    font-family:"Cormorant Garamond",serif;
+    font-size:clamp(3rem,8vw,5.5rem);
+    font-weight:600;
+    letter-spacing:1px;
+}
 
-        .sub-masthead {
-            display: flex;
-            justify-content: space-between;
-            border-top: var(--line-thick) solid var(--ink-black);
-            border-bottom: var(--line-thin) solid var(--ink-black);
-            padding: 6px 0;
-            margin-top: 10px;
-            font-size: 12px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
+.subtitle{
+    margin-top:12px;
+    color:#666;
+    font-size:clamp(.95rem,2vw,1.05rem);
+}
 
-        /* --- Navigation --- */
-        nav {
-            border-bottom: var(--line-thick) solid var(--ink-black);
-            padding: 8px 0;
-            margin-bottom: 20px;
-        }
+nav{
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    margin:40px 0;
+    flex-wrap:wrap;
+}
 
-        nav ul {
-            list-style: none;
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-        }
+nav a{
+    color:#444;
+    text-decoration:none;
+    font-size:.95rem;
+    transition:.3s;
+}
 
-        nav a {
-            text-decoration: none;
-            color: var(--ink-black);
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+nav a:hover{
+    color:#000;
+}
 
-        nav a:hover {
-            text-decoration: underline;
-        }
+.hero{
+    border-top:1px solid #ddd;
+    border-bottom:1px solid #ddd;
+    padding:70px 0;
+    text-align:center;
+}
 
-        /* --- Editorial Layout Grid --- */
-        .main-layout {
-            display: grid;
-            grid-template-columns: 2fr 4fr 2fr;
-            gap: 20px;
-        }
+.hero h1{
+    font-family:"Cormorant Garamond",serif;
+    font-size:clamp(2rem,6vw,3.5rem);
+    font-weight:500;
+    margin-bottom:20px;
+}
 
-        /* Columns styling */
-        .col {
-            display: flex;
-            box-sizing: border-box;
-            flex-direction: column;
-        }
+.hero p{
+    max-width:620px;
+    margin:auto;
+    color:#555;
+    font-size:1.05rem;
+}
 
-        .col-left {
-            border-right: var(--line-thin) solid var(--border-color);
-            padding-right: 20px;
-        }
+.button{
+    display:inline-block;
+    margin-top:35px;
+    padding:14px 34px;
+    border:1px solid #111;
+    color:#111;
+    text-decoration:none;
+    transition:.3s;
+}
 
-        .col-right {
-            border-left: var(--line-thin) solid var(--border-color);
-            padding-left: 20px;
-        }
+.button:hover{
+    background:#111;
+    color:#fff;
+}
 
-        /* --- Typography & Elements --- */
-        .section-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #666;
-            margin-bottom: 6px;
-        }
+section{
+    padding:80px 0;
+}
 
-        h1, h2, h3, h4 {
-            font-family: 'Roboto Serif', serif;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 8px;
-        }
+.section-title{
+    font-family:"Cormorant Garamond",serif;
+    font-size:2.1rem;
+    text-align:center;
+    margin-bottom:50px;
+}
 
-        a {
-            color: var(--ink-black);
-            text-decoration: none;
-        }
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:30px;
+}
 
-        a:hover {
-            color: #555;
-        }
+.card{
+    background:#fff;
+    padding:30px;
+    border:1px solid #ececec;
+}
 
-        p {
-            font-size: 14px;
-            line-height: 1.5;
-            color: #222;
-            margin-bottom: 15px;
-        }
+.card h3{
+    font-family:"Cormorant Garamond",serif;
+    font-size:1.6rem;
+    margin-bottom:15px;
+}
 
-        .timestamp {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 12px;
-            display: block;
-        }
+.card p{
+    color:#666;
+}
 
-        .divider {
-            border-top: var(--line-thin) solid var(--border-color);
-            margin: 15px 0;
-            width: 100%;
-        }
+footer{
+    border-top:1px solid #ddd;
+    text-align:center;
+    padding:40px 20px;
+    color:#777;
+    font-size:.9rem;
+}
 
-        /* --- Hero Article (Center Column) --- */
-        .hero-article h1 {
-            font-size: 36px;
-            margin-bottom: 12px;
-        }
+@media (max-width:600px){
 
-        .hero-img {
-            width: 100%;
-            height: auto;
-            background-color: #eaeaea;
-            aspect-ratio: 16 / 9;
-            margin-bottom: 12px;
-            object-fit: cover;
-        }
+header{
+    padding:50px 0 30px;
+}
 
-        /* --- Opinion / Side Panels --- */
-        .opinion-item {
-            padding-bottom: 10px;
-        }
-        .opinion-item h3 {
-            font-size: 16px;
-            font-weight: 700;
-        }
-        .author {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-            color: #333;
-        }
+.hero{
+    padding:50px 0;
+}
 
-        /* --- Responsive Tweaks --- */
-        @media (max-width: 900px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-            }
-            .col-left, .col-right {
-                border: none;
-                padding: 0;
-            }
-            .masthead {
-                font-size: 38px;
-            }
-        }
-    </style>
+section{
+    padding:60px 0;
+}
+
+nav{
+    gap:18px;
+}
+
+}
+</style>
 </head>
+
 <body>
 
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <div class="top-bar">
-                <div>English Edition</div>
-                <div>Saturday, June 27, 2026</div>
-                <div>Print Edition</div>
-            </div>
-            
-            <div class="masthead">The Raga Journal.</div>
-            
-            <div class="sub-masthead">
-                <div>Classical Insights. Modern Perspectives.</div>
-                <div>$3.00</div>
-            </div>
-        </header>
+<header class="container">
 
-        <!-- Navigation Bar -->
-        <nav>
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#"> canonic</a></li>
-                <li><a href="#">Compositions</a></li>
-                <li><a href="#">Interviews</a></li>
-                <li><a href="#">The Record</a></li>
-                <li><a href="#">Reviews</a></li>
-                <li><a href="#">Culture</a></li>
-            </ul>
-        </nav>
+<div class="logo">The Raga Journal</div>
 
-        <!-- Main WSJ-Style 3-Column Grid Layout -->
-        <main class="main-layout">
-            
-            <!-- Left Column: Secondary News & Bulletins -->
-            <div class="col col-left">
-                <div class="article-summary">
-                    <div class="section-label">The Evolution</div>
-                    <h2><a href="#">How Digital Archives are Preserving Century-Old Visuals</a></h2>
-                    <p>A global effort to digitize rare historical recordings is shifting how modern scholars analyze generational transitions in style.</p>
-                    <span class="timestamp">5 min read</span>
-                </div>
-                
-                <div class="divider"></div>
-                
-                <div class="article-summary">
-                    <div class="section-label">Global Stage</div>
-                    <h3><a href="#">Acoustics Redefined: Architectural Shifts in New Concert Halls</a></h3>
-                    <p>Modern venues lean into algorithmic design to mimic natural structural resonant properties.</p>
-                </div>
+<p class="subtitle">
+A quiet place dedicated to Indian Classical Music, tradition, stories and thoughtful listening.
+</p>
 
-                <div class="divider"></div>
+<nav>
+<a href="#">Home</a>
+<a href="#">Articles</a>
+<a href="#">Ragas</a>
+<a href="#">Artists</a>
+<a href="#">About</a>
+</nav>
 
-                <div class="article-summary">
-                    <div class="section-label">Market Watch</div>
-                    <h3><a href="#">The Surprising Surge in Vinyl Sales Across Heritage Genres</a></h3>
-                    <p>Data shows physical distribution networks hitting a ten-year high among younger audiences.</p>
-                </div>
-            </div>
+</header>
 
-            <!-- Center Column: Main Headline & Hero Story -->
-            <div class="col col-center">
-                <div class="hero-article">
-                    <div class="section-label">A Deeper Resonance</div>
-                    <h1><a href="#">The Global Renaissance of Classical Frameworks in Modern Composition</a></h1>
-                    <p style="font-size: 16px; font-weight: 500; color: #444;">As digital production reaches peak saturation, pioneering creators are looking backward to move forward, integrating complex traditional modal structures into contemporary soundscapes.</p>
-                    
-                    <!-- Placeholder representing a clean news photo -->
-                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450' viewBox='0 0 800 450'><rect width='100%' height='100%' fill='%23f0f0ee'/><text x='50%' y='50%' font-family='sans-serif' font-size='24' fill='%23999' dominant-baseline='middle' text-anchor='middle'>Featured Imagery</text></svg>" class="hero-img" alt="Editorial Placeholder">
-                    
-                    <p>For decades, the intersection of traditional framework and western electronic synthesis was treated as novelty. However, a new wave of producers is proving that the intricate mathematics behind ancient scales can provide a blueprint for complex modern audio engineering.</p>
-                    <p>Scholars argue that this shift isn't just aesthetic, but a direct response to a cultural demand for deeper storytelling depth in an era dominated by fleeting algorithmic trends.</p>
-                    <span class="timestamp">Updated 12 minutes ago</span>
-                </div>
-            </div>
+<section class="hero">
 
-            <!-- Right Column: Opinion & Commentary -->
-            <div class="col col-right">
-                <div class="section-label" style="border-bottom: 1px solid var(--ink-black); padding-bottom: 4px; margin-bottom: 12px;">Opinion & Analysis</div>
-                
-                <div class="opinion-item">
-                    <div class="author">By Aarav Mehta</div>
-                    <h3><a href="#">Why Strict Preservationism is Stifling Musical Innovation</a></h3>
-                    <p>Without evolution, structure becomes a museum piece. True reverence requires the courage to experiment.</p>
-                </div>
+<div class="container">
 
-                <div class="divider"></div>
+<h1>Where Every Raga Has A Story.</h1>
 
-                <div class="opinion-item">
-                    <div class="author">By Dr. Elena Rostova</div>
-                    <h3><a href="#">The Mathematical Perfection of the Bhairav Scale</a></h3>
-                    <p>An analytical breakdown of the sonic frequencies that trigger universal human emotional responses.</p>
-                </div>
+<p>
+Simple, timeless and distraction-free. Read about ragas, instruments, musicians, concerts and the rich heritage of Indian classical music.
+</p>
 
-                <div class="divider"></div>
+<a href="#" class="button">Start Reading</a>
 
-                <div class="opinion-item">
-                    <div class="author">By The Editorial Board</div>
-                    <h3><a href="#">Funding the Future of Art in Public Schools</a></h3>
-                    <p>Why corporate grants cannot replace structural municipal investment in classical training programs.</p>
-                </div>
-            </div>
+</div>
 
-        </main>
-    </div>
+</section>
+
+<section class="container">
+
+<h2 class="section-title">Latest Journal</h2>
+
+<div class="grid">
+
+<div class="card">
+<h3>The Morning Ragas</h3>
+<p>Exploring the peaceful soundscape that welcomes the beginning of the day.</p>
+</div>
+
+<div class="card">
+<h3>Voices of Tradition</h3>
+<p>Stories of legendary musicians and the timeless legacy they continue to inspire.</p>
+</div>
+
+<div class="card">
+<h3>Beyond Performance</h3>
+<p>Essays, reflections and conversations celebrating music as a lifelong practice.</p>
+</div>
+
+</div>
+
+</section>
+
+<footer>
+
+© 2026 The Raga Journal — Minimal. Elegant. Timeless.
+
+</footer>
 
 </body>
 </html>
