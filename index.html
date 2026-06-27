@@ -1,11 +1,500 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>The Raga Journal</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Raga Journal</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+
+font-family:Inter,sans-serif;
+background:#0d1117;
+color:white;
+overflow-x:hidden;
+
+}
+
+body::before{
+
+content:"";
+position:fixed;
+width:100%;
+height:100%;
+background:
+linear-gradient(rgba(10,15,20,.82),rgba(10,15,20,.88)),
+url("https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1800&q=80");
+background-size:cover;
+background-position:center;
+z-index:-2;
+
+}
+
+nav{
+
+position:fixed;
+top:20px;
+left:50%;
+transform:translateX(-50%);
+width:92%;
+max-width:1200px;
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+
+padding:15px 30px;
+
+background:rgba(255,255,255,.08);
+
+backdrop-filter:blur(20px);
+
+border:1px solid rgba(255,255,255,.1);
+
+border-radius:18px;
+
+z-index:1000;
+
+}
+
+.logo{
+
+display:flex;
+align-items:center;
+gap:15px;
+
+}
+
+.logo img{
+
+width:60px;
+height:60px;
+border-radius:50%;
+background:white;
+padding:5px;
+
+}
+
+.logo h2{
+
+font-family:"Cormorant Garamond",serif;
+font-size:32px;
+font-weight:700;
+
+}
+
+nav ul{
+
+display:flex;
+gap:30px;
+list-style:none;
+
+}
+
+nav a{
+
+text-decoration:none;
+color:white;
+font-size:15px;
+transition:.3s;
+
+}
+
+nav a:hover{
+
+color:#f0b95a;
+
+}
+
+.hero{
+
+height:100vh;
+
+display:flex;
+justify-content:center;
+align-items:center;
+text-align:center;
+
+padding:30px;
+
+}
+
+.hero h1{
+
+font-family:"Cormorant Garamond",serif;
+font-size:82px;
+
+line-height:1;
+
+margin-bottom:20px;
+
+}
+
+.hero p{
+
+max-width:750px;
+
+font-size:20px;
+
+opacity:.9;
+
+margin:auto;
+
+line-height:1.8;
+
+}
+
+.btn{
+
+display:inline-block;
+
+margin-top:40px;
+
+padding:18px 42px;
+
+background:#c89c45;
+
+color:white;
+
+text-decoration:none;
+
+border-radius:50px;
+
+font-weight:600;
+
+transition:.3s;
+
+}
+
+.btn:hover{
+
+background:#e2b95e;
+
+transform:translateY(-3px);
+
+}
+
+section{
+
+padding:110px 8%;
+
+}
+
+.title{
+
+font-size:52px;
+
+font-family:"Cormorant Garamond",serif;
+
+margin-bottom:60px;
+
+text-align:center;
+
+}
+
+.grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+
+gap:35px;
+
+}
+
+.card{
+
+background:rgba(255,255,255,.06);
+
+padding:35px;
+
+border-radius:22px;
+
+backdrop-filter:blur(15px);
+
+transition:.4s;
+
+}
+
+.card:hover{
+
+transform:translateY(-10px);
+
+background:rgba(255,255,255,.1);
+
+}
+
+.card h3{
+
+font-family:"Cormorant Garamond",serif;
+
+font-size:34px;
+
+margin-bottom:15px;
+
+color:#f0c36d;
+
+}
+
+.card p{
+
+line-height:1.8;
+
+opacity:.9;
+
+}
+
+footer{
+
+padding:70px 20px;
+
+text-align:center;
+
+background:black;
+
+}
+
+footer h2{
+
+font-family:"Cormorant Garamond",serif;
+
+font-size:40px;
+
+margin-bottom:10px;
+
+}
+
+footer p{
+
+opacity:.7;
+
+}
+
+@media(max-width:900px){
+
+.hero h1{
+
+font-size:54px;
+
+}
+
+nav ul{
+
+display:none;
+
+}
+
+}
+
+</style>
+
 </head>
-<body style="font-family:Arial;text-align:center;padding:100px;">
-  <h1>The Raga Journal</h1>
-  <h2>Coming Soon</h2>
-  <p>India's Journal of Music, Culture & Heritage.</p>
+
+<body>
+
+<nav>
+
+<div class="logo">
+
+<img src="https://raw.githubusercontent.com/theragajournal/theragajournal/refs/heads/main/ehgycn.jpg">
+
+<h2>The Raga Journal</h2>
+
+</div>
+
+<ul>
+
+<li><a href="#">Home</a></li>
+<li><a href="#">Ragas</a></li>
+<li><a href="#">Artists</a></li>
+<li><a href="#">Journal</a></li>
+<li><a href="#">Events</a></li>
+
+</ul>
+
+</nav>
+
+<section class="hero">
+
+<div>
+
+<h1>The Raga Journal</h1>
+
+<p>
+
+Preserving the timeless tradition of Indian Classical Music through stories,
+ragas, artists, history, concerts and knowledge for generations to come.
+
+</p>
+
+<a href="#" class="btn">Explore the Journey</a>
+
+</div>
+
+</section>
+
+<section>
+
+<h2 class="title">Featured Articles</h2>
+
+<div class="grid">
+
+<div class="card">
+
+<h3>Raga Yaman</h3>
+
+<p>
+
+Discover the elegance, mood and timeless beauty of one of the most celebrated evening ragas.
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Masters of Music</h3>
+
+<p>
+
+Read inspiring stories of legendary vocalists and instrumentalists who shaped Indian Classical Music.
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>The Tabla Tradition</h3>
+
+<p>
+
+Explore gharanas, compositions, rhythmic cycles and the evolution of the tabla through centuries.
+
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+<section>
+
+<h2 class="title">Explore</h2>
+
+<div class="grid">
+
+<div class="card">
+
+<h3>Ragas</h3>
+
+<p>
+
+Learn about over 500 ragas with notation, history and listening recommendations.
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Instruments</h3>
+
+<p>
+
+Sitar, Sarod, Tabla, Santoor, Veena, Bansuri and many more.
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Concert Archive</h3>
+
+<p>
+
+Browse legendary concerts and rare performances from renowned maestros.
+
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+<section>
+
+<h2 class="title">Upcoming Events</h2>
+
+<div class="grid">
+
+<div class="card">
+
+<h3>Baithak Series</h3>
+
+<p>
+
+Monthly intimate concerts celebrating authentic Indian Classical traditions.
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Workshops</h3>
+
+<p>
+
+Interactive sessions by distinguished musicians for students worldwide.
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Interviews</h3>
+
+<p>
+
+Exclusive conversations with contemporary maestros and rising artists.
+
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+<footer>
+
+<h2>The Raga Journal</h2>
+
+<p>
+
+Celebrating the soul of Indian Classical Music.
+
+</p>
+
+</footer>
+
 </body>
+
 </html>
