@@ -1,295 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>The Raga Journal</title>
 
-<link rel="icon" type="image/jpeg"
-href="https://raw.githubusercontent.com/theragajournal/theragajournal/refs/heads/main/ehgycn.jpg">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-body{
-font-family:Inter,sans-serif;
-background:#0f1720;
-color:white;
-overflow-x:hidden;
-}
-
-body::before{
-content:"";
-position:fixed;
-inset:0;
-background:
-linear-gradient(rgba(10,15,20,.75),rgba(10,15,20,.85)),
-url("https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1800&q=80");
-background-size:cover;
-background-position:center;
-z-index:-1;
-}
-
-nav{
-position:fixed;
-top:20px;
-left:50%;
-transform:translateX(-50%);
-width:92%;
-max-width:1200px;
-padding:15px 30px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-background:rgba(255,255,255,.08);
-backdrop-filter:blur(18px);
-border-radius:20px;
-}
-
-.logo{
-display:flex;
-align-items:center;
-gap:15px;
-}
-
-.logo img{
-width:60px;
-height:60px;
-border-radius:50%;
-object-fit:cover;
-background:#fff;
-padding:2px;
-}
-
-.logo h2{
-font-family:"Cormorant Garamond",serif;
-font-size:34px;
-font-weight:700;
-}
-
-nav ul{
-display:flex;
-gap:28px;
-list-style:none;
-}
-
-nav a{
-text-decoration:none;
-color:white;
-font-weight:500;
-transition:.3s;
-}
-
-nav a:hover{
-color:#d8b05f;
-}
-
-.hero{
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-text-align:center;
-padding:20px;
-}
-
-.hero h1{
-font-family:"Cormorant Garamond",serif;
-font-size:80px;
-margin-bottom:20px;
-}
-
-.hero p{
-max-width:750px;
-margin:auto;
-font-size:20px;
-line-height:1.8;
-opacity:.9;
-}
-
-.button{
-display:inline-block;
-margin-top:40px;
-padding:18px 42px;
-background:#c79b47;
-color:white;
-text-decoration:none;
-border-radius:50px;
-font-weight:600;
-transition:.3s;
-}
-
-.button:hover{
-background:#ddb866;
-transform:translateY(-4px);
-}
-
-section{
-padding:100px 8%;
-}
-
-.title{
-text-align:center;
-font-family:"Cormorant Garamond",serif;
-font-size:50px;
-margin-bottom:50px;
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-gap:30px;
-}
-
-.card{
-background:rgba(255,255,255,.08);
-padding:35px;
-border-radius:20px;
-backdrop-filter:blur(12px);
-transition:.3s;
-}
-
-.card:hover{
-transform:translateY(-8px);
-background:rgba(255,255,255,.12);
-}
-
-.card h3{
-font-family:"Cormorant Garamond",serif;
-font-size:34px;
-margin-bottom:15px;
-color:#d9b15e;
-}
-
-.card p{
-line-height:1.8;
-opacity:.9;
-}
-
-footer{
-padding:60px;
-text-align:center;
-background:#050505;
-}
-
-footer img{
-width:90px;
-height:90px;
-border-radius:50%;
-object-fit:cover;
-margin-bottom:20px;
-}
-
-footer h2{
-font-family:"Cormorant Garamond",serif;
-font-size:42px;
-margin-bottom:10px;
-}
-
-footer p{
-opacity:.7;
-}
-
-@media(max-width:900px){
-
-.hero h1{
-font-size:52px;
-}
-
-nav ul{
-display:none;
-}
-
-}
-
-</style>
-
+<link rel="stylesheet" href="asset/css/style.css">
 </head>
 
 <body>
 
-<nav>
+<header class="header">
 
-<div class="logo">
+<div class="topbar">
 
-<img src="https://raw.githubusercontent.com/theragajournal/theragajournal/refs/heads/main/ehgycn.jpg" alt="The Raga Journal Logo">
+<button class="menu-btn">☰</button>
 
-<h2>The Raga Journal</h2>
+<a href="/" class="logo">
 
-</div>
-
-<ul>
-<li><a href="#">Home</a></li>
-<li><a href="#">Journal</a></li>
-<li><a href="#">Ragas</a></li>
-<li><a href="#">Artists</a></li>
-<li><a href="#">Contact</a></li>
-</ul>
-
-</nav>
-
-<section class="hero">
+<img src="assets/images/logo.jpg" alt="Logo">
 
 <div>
 
 <h1>The Raga Journal</h1>
 
+<p>Indian Classical Music</p>
+
+</div>
+
+</a>
+
+<button class="search-btn">🔍</button>
+
+</div>
+
+<nav>
+
+<a href="#">Latest</a>
+
+<a href="#">Ragas</a>
+
+<a href="#">Artists</a>
+
+<a href="#">Instruments</a>
+
+<a href="#">Reviews</a>
+
+<a href="#">Archive</a>
+
+</nav>
+
+</header>
+
+<main>
+
+<section class="hero">
+
+<div class="hero-text">
+
+<span class="tag">
+FEATURED
+</span>
+
+<h2>
+
+The Living Tradition of
+Indian Classical Music
+
+</h2>
+
 <p>
-Discover the timeless beauty of Indian Classical Music through ragas, artists, traditions, interviews, concerts and thoughtful storytelling.
+
+Exploring ragas, maestros,
+history and timeless traditions
+through long-form journalism.
+
 </p>
 
-<a href="#" class="button">Explore</a>
+<a href="#" class="button">
+
+Read Story →
+
+</a>
+
+</div>
+
+<div class="hero-image">
+
+<img src="assets/images/hero.jpg">
 
 </div>
 
 </section>
 
-<section>
+<section class="articles">
 
-<h2 class="title">Featured</h2>
+<h3>Latest Articles</h3>
 
-<div class="grid">
+<div class="article-grid">
 
-<div class="card">
-<h3>Ragas</h3>
-<p>Explore hundreds of ragas with their mood, time, history and listening recommendations.</p>
-</div>
+<article>
 
-<div class="card">
-<h3>Artists</h3>
-<p>Read about legendary maestros and emerging musicians shaping the future of Indian classical music.</p>
-</div>
+<h4>Raga Yaman</h4>
 
-<div class="card">
-<h3>Instruments</h3>
-<p>Discover Tabla, Sitar, Sarod, Santoor, Veena, Bansuri and many more instruments.</p>
-</div>
+<p>Coming soon...</p>
+
+</article>
+
+<article>
+
+<h4>The Legacy of Alla Rakha</h4>
+
+<p>Coming soon...</p>
+
+</article>
+
+<article>
+
+<h4>History of the Sitar</h4>
+
+<p>Coming soon...</p>
+
+</article>
 
 </div>
 
 </section>
+
+</main>
 
 <footer>
 
-<img src="https://raw.githubusercontent.com/theragajournal/theragajournal/refs/heads/main/ehgycn.jpg" alt="Logo">
+<p>
 
-<h2>The Raga Journal</h2>
+© 2026 The Raga Journal
 
-<p>Celebrating Indian Classical Music.</p>
+</p>
 
 </footer>
 
+<script src="assets/js/main.js"></script>
+
 </body>
+
 </html>
