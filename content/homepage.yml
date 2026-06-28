@@ -1,0 +1,77 @@
+site:
+  title: "The Raga Journal"
+  tagline: "Music. Culture. Tradition."
+  logo: "/assets/images/logo.png"
+
+hero:
+  enabled: true
+  title: "Where Every Raga Tells a Story"
+  subtitle: "Exploring Indian Classical Music and Beyond"
+  image: "/assets/images/hero.jpg"
+  button_text: "Read Today's Stories"
+  button_link: "/articles/"
+
+announcement:
+  enabled: false
+  text: ""
+  link: ""
+
+featured:
+  enabled: true
+  article: "welcome-to-the-raga-journal"
+
+editors_pick:
+  enabled: true
+  limit: 4
+
+latest:
+  enabled: true
+  limit: 12
+
+trending:
+  enabled: true
+  limit: 6
+
+categories:
+  enabled: true
+  items:
+    - Hindustani
+    - Carnatic
+    - Tabla
+    - Vocal
+    - Instruments
+    - Interviews
+    - Reviews
+    - History
+
+gallery:
+  enabled: true
+  limit: 8
+
+videos:
+  enabled: true
+  limit: 4
+
+newsletter:
+  enabled: true
+  title: "Subscribe to The Raga Journal"
+  text: "Receive new stories directly in your inbox."
+
+footer:
+  copyright: "© The Raga Journal"
+  about: "/about/"
+  contact: "/contact/"
+  privacy: "/privacy/"
+  terms: "/terms/"
+
+social:
+  facebook: ""
+  instagram: ""
+  youtube: ""
+  threads: ""
+  x: ""
+
+theme:
+  accent: "#B08A44"
+  background: "#FCFBF7"
+  text: "#222222"
