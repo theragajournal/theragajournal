@@ -3,7 +3,7 @@ site:
   tagline: Music. Culture. Tradition.
   logo: /assets/images/logo.png
 hero:
-  enabled: false
+  enabled: true
   title: Where Every Raga Tells a Story
   subtitle: Shhdjdjdjkdjdjd
   image: /uploads/38426.jpg
@@ -14,44 +14,36 @@ announcement:
   text: ""
   link: ""
 featured:
-  enabled: true
-  article: welcome-to-the-raga-journal
+  enabled: false
+  article: Der
 editors_pick:
-  enabled: true
+  enabled: false
   limit: 4
 trending:
   enabled: true
-  limit: 6
+  limit: 4
 latest:
   enabled: true
-  limit: 12
+  limit: 4
 categories:
-  enabled: true
-  items:
-    - Hindustani
-    - Carnatic
-    - Tabla
-    - Vocal
-    - Instruments
-    - Interviews
-    - Reviews
-    - History
+  enabled: false
+  items: []
 gallery:
-  enabled: true
+  enabled: false
   limit: 8
 videos:
-  enabled: true
+  enabled: false
   limit: 4
 newsletter:
-  enabled: true
-  title: Subscribe to The Raga Journal
-  text: Receive new stories directly in your inbox.
+  enabled: false
+  title: D
+  text: D
 footer:
-  copyright: © The Raga Journal
-  about: /about/
-  contact: /contact/
-  privacy: /privacy/
-  terms: /terms/
+  copyright: Y
+  about: "5"
+  contact: T
+  privacy: Y
+  terms: Y
 social:
   facebook: ""
   instagram: ""
@@ -59,6 +51,6 @@ social:
   threads: ""
   x: ""
 theme:
-  accent: "#dd9f1a"
-  background: "#FCFBF7"
-  text: "#222222"
+  accent: "#403131"
+  background: "#d31515"
+  text: "#b39999"
