@@ -190,3 +190,155 @@ collections:
           - {label: Title,name: title,widget: string}
 
           - {label: Description,name: text,widget: text}
+      - label: "Footer"
+
+        name: footer
+
+        widget: object
+
+        fields:
+
+          - {label: Copyright,name: copyright,widget: string}
+
+          - {label: About Link,name: about,widget: string}
+
+          - {label: Contact Link,name: contact,widget: string}
+
+          - {label: Privacy Link,name: privacy,widget: string}
+
+          - {label: Terms Link,name: terms,widget: string}
+
+      - label: "Social"
+
+        name: social
+
+        widget: object
+
+        fields:
+
+          - {label: Facebook,name: facebook,widget: string,required: false}
+
+          - {label: Instagram,name: instagram,widget: string,required: false}
+
+          - {label: YouTube,name: youtube,widget: string,required: false}
+
+          - {label: Threads,name: threads,widget: string,required: false}
+
+          - {label: X,name: x,widget: string,required: false}
+
+      - label: "Theme"
+
+        name: theme
+
+        widget: object
+
+        fields:
+
+          - {label: Accent Color,name: accent,widget: color}
+
+          - {label: Background Color,name: background,widget: color}
+
+          - {label: Text Color,name: text,widget: color}
+
+##############################################################################
+# ARTICLES
+##############################################################################
+
+- label: "Articles"
+
+  name: "articles"
+
+  folder: "content/articles"
+
+  create: true
+
+  delete: true
+
+  extension: "md"
+
+  format: "frontmatter"
+
+  slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+
+  preview_path: "articles/{{slug}}"
+
+  summary: "{{title}}"
+
+  fields:
+
+    - {label: Title,name: title,widget: string}
+
+    - {label: Slug,name: slug,widget: string}
+
+    - {label: Description,name: description,widget: text}
+
+    - {label: Publish Date,name: date,widget: datetime}
+
+    - {label: Cover Image,name: cover,widget: image}
+
+    - {label: Banner Image,name: banner,widget: image,required: false}
+
+    - {label: Author,name: author,widget: string}
+
+    - label: Category
+      name: category
+      widget: select
+      options:
+        - Editorial
+        - News
+        - Tabla
+        - Hindustani
+        - Carnatic
+        - Vocal
+        - Instruments
+        - Reviews
+        - Interviews
+        - History
+        - Opinion
+
+    - label: Tags
+      name: tags
+      widget: list
+
+    - {label: Featured,name: featured,widget: boolean,default: false}
+
+    - {label: Trending,name: trending,widget: boolean,default: false}
+
+    - {label: Editor's Pick,name: editor,widget: boolean,default: false}
+
+    - {label: Breaking News,name: breaking,widget: boolean,default: false}
+
+    - {label: Show on Homepage,name: homepage,widget: boolean,default: true}
+
+    - {label: Contains Video,name: video,widget: boolean,default: false}
+
+    - {label: YouTube URL,name: youtube_url,widget: string,required: false}
+
+    - {label: External Source,name: source,widget: string,required: false}
+
+    - {label: Reading Time,name: reading_time,widget: number,required: false}
+
+    - {label: Draft,name: draft,widget: boolean,default: false}
+
+    - {label: Allow Comments,name: comments,widget: boolean,default: true}
+
+    - label: SEO
+      name: seo
+      widget: object
+      fields:
+
+        - {label: SEO Title,name: title,widget: string,required: false}
+
+        - {label: SEO Description,name: description,widget: text,required: false}
+
+        - {label: Canonical URL,name: canonical,widget: string,required: false}
+
+        - {label: No Index,name: noindex,widget: boolean,default: false}
+
+        - {label: Open Graph Image,name: image,widget: image,required: false}
+
+    - label: Body
+
+      name: body
+
+      widget: markdown
