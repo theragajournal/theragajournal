@@ -2,54 +2,191 @@ backend:
   name: github
   repo: theragajournal/theragajournal
   branch: main
-  base_url: https://theragajournal.pages.dev
-  auth_endpoint: api/auth
 
-site_url: https://theragajournal.online
-display_url: https://theragajournal.online
+local_backend: false
 
-media_folder: "assets/uploads"
-public_folder: "/assets/uploads"
+media_folder: "uploads"
+public_folder: "/uploads"
+
+site_url: "https://theragajournal.online"
+display_url: "https://theragajournal.online"
+
+logo_url: "/assets/images/logo.png"
 
 publish_mode: editorial_workflow
 
+slug:
+  encoding: "ascii"
+  clean_accents: true
+  sanitize_replacement: "-"
+
+editor:
+  preview: true
+
+media_library:
+  name: default
+
 collections:
-  - name: "posts"
-    label: "Posts"
-    label_singular: "Post"
-    folder: "posts"
-    create: true
-    delete: true
-    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
-    format: "frontmatter"
-    extension: "md"
+
+##############################################################################
+# HOMEPAGE
+##############################################################################
+
+- label: "Homepage"
+  name: "homepage"
+
+  files:
+
+  - label: "Homepage Settings"
+
+    name: "homepage"
+
+    file: "content/homepage.yml"
 
     fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Slug", name: "slug", widget: "string", required: false }
-      - { label: "Date", name: "date", widget: "datetime" }
-      - { label: "Cover Image", name: "thumbnail", widget: "image", required: false }
-      - { label: "Tags", name: "tags", widget: "list", required: false }
-      - { label: "Draft", name: "draft", widget: "boolean", default: false, required: false }
-      - { label: "Body", name: "body", widget: "markdown" }
 
-  - name: "homepage"
-    label: "Homepage"
-    files:
-      - file: "content/home.yml"
-        label: "Homepage"
-        name: "homepage"
+      - label: "Site"
+        name: "site"
+        widget: "object"
+
         fields:
-          - { label: "Site Title", name: "site_title", widget: "string" }
-          - { label: "Subtitle", name: "subtitle", widget: "text" }
 
-          - label: "Hero"
-            name: "hero"
-            widget: "object"
-            fields:
-              - { label: "Title", name: "title", widget: "string" }
-              - { label: "Description", name: "description", widget: "markdown" }
-              - { label: "Button Text", name: "button_text", widget: "string" }
-              - { label: "Button Link", name: "button_link", widget: "string" }
+          - {label: Title,name: title,widget: string}
 
-          - { label: "Footer", name: "footer", widget: "string" }
+          - {label: Tagline,name: tagline,widget: string}
+
+          - {label: Logo,name: logo,widget: image}
+
+      - label: "Hero"
+
+        name: "hero"
+
+        widget: "object"
+
+        fields:
+
+          - {label: Enable,name: enabled,widget: boolean,default: true}
+
+          - {label: Heading,name: title,widget: string}
+
+          - {label: Subtitle,name: subtitle,widget: text}
+
+          - {label: Background Image,name: image,widget: image}
+
+          - {label: Button Text,name: button_text,widget: string}
+
+          - {label: Button Link,name: button_link,widget: string}
+
+      - label: "Announcement"
+
+        name: "announcement"
+
+        widget: "object"
+
+        fields:
+
+          - {label: Enable,name: enabled,widget: boolean,default: false}
+
+          - {label: Text,name: text,widget: text,required: false}
+
+          - {label: Link,name: link,widget: string,required: false}
+
+      - label: "Featured"
+
+        name: "featured"
+
+        widget: object
+
+        fields:
+
+          - {label: Enable,name: enabled,widget: boolean,default: true}
+
+          - {label: Featured Article Slug,name: article,widget: string}
+
+      - label: "Editor's Pick"
+
+        name: "editors_pick"
+
+        widget: object
+
+        fields:
+
+          - {label: Enable,name: enabled,widget: boolean,default: true}
+
+          - {label: Number of Articles,name: limit,widget: number,default: 4}
+
+      - label: "Trending"
+
+        name: "trending"
+
+        widget: object
+
+        fields:
+
+          - {label: Enable,name: enabled,widget: boolean,default: true}
+
+          - {label: Number of Articles,name: limit,widget: number,default: 6}
+
+      - label: "Latest"
+
+        name: "latest"
+
+        widget: object
+
+        fields:
+
+          - {label: Enable,name: enabled,widget: boolean,default: true}
+
+          - {label: Number of Articles,name: limit,widget: number,default: 12}
+
+      - label: "Categories"
+
+        name: "categories"
+
+        widget: object
+
+        fields:
+
+          - {label: Enable,name: enabled,widget: boolean,default: true}
+
+          - label: Items
+            name: items
+            widget: list
+
+      - label: "Gallery"
+
+        name: gallery
+
+        widget: object
+
+        fields:
+
+          - {label: Enable,name: enabled,widget: boolean,default: true}
+
+          - {label: Images,name: limit,widget: number,default: 8}
+
+      - label: "Videos"
+
+        name: videos
+
+        widget: object
+
+        fields:
+
+          - {label: Enable,name: enabled,widget: boolean,default: true}
+
+          - {label: Videos,name: limit,widget: number,default: 4}
+
+      - label: "Newsletter"
+
+        name: newsletter
+
+        widget: object
+
+        fields:
+
+          - {label: Enable,name: enabled,widget: boolean,default: true}
+
+          - {label: Title,name: title,widget: string}
+
+          - {label: Description,name: text,widget: text}
