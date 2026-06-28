@@ -474,3 +474,155 @@ collections:
             - {label: Label, name: label, widget: string}
 
             - {label: URL, name: url, widget: string}
+##############################################################################
+# SITE SETTINGS
+##############################################################################
+
+- label: "Site Settings"
+  name: "settings"
+
+  files:
+
+    - label: "General Settings"
+      name: "general"
+      file: "content/settings.yml"
+
+      fields:
+
+        - {label: Site Name, name: site_name, widget: string}
+
+        - {label: Site Description, name: description, widget: text}
+
+        - {label: Site URL, name: url, widget: string}
+
+        - {label: Logo, name: logo, widget: image}
+
+        - {label: Favicon, name: favicon, widget: image}
+
+        - {label: Default Author, name: author, widget: string}
+
+        - {label: Default Language, name: language, widget: string, default: en}
+
+        - {label: Time Zone, name: timezone, widget: string}
+
+        - {label: Contact Email, name: email, widget: string}
+
+        - {label: Phone, name: phone, widget: string, required: false}
+
+        - {label: Address, name: address, widget: text, required: false}
+
+##############################################################################
+# SEO
+##############################################################################
+
+    - label: "SEO"
+      name: "seo"
+      file: "content/seo.yml"
+
+      fields:
+
+        - {label: Meta Title, name: title, widget: string}
+
+        - {label: Meta Description, name: description, widget: text}
+
+        - {label: Default Social Image, name: image, widget: image}
+
+        - {label: Google Analytics ID, name: ga, widget: string, required: false}
+
+        - {label: Google Search Console Verification, name: gsc, widget: string, required: false}
+
+        - {label: Bing Verification, name: bing, widget: string, required: false}
+
+        - {label: Robots.txt, name: robots, widget: text}
+
+##############################################################################
+# SOCIAL
+##############################################################################
+
+    - label: "Social Profiles"
+      name: "social"
+      file: "content/social.yml"
+
+      fields:
+
+        - {label: Facebook, name: facebook, widget: string, required: false}
+
+        - {label: Instagram, name: instagram, widget: string, required: false}
+
+        - {label: YouTube, name: youtube, widget: string, required: false}
+
+        - {label: Threads, name: threads, widget: string, required: false}
+
+        - {label: X, name: x, widget: string, required: false}
+
+        - {label: LinkedIn, name: linkedin, widget: string, required: false}
+
+        - {label: GitHub, name: github, widget: string, required: false}
+
+##############################################################################
+# ANNOUNCEMENT BAR
+##############################################################################
+
+    - label: "Announcement"
+      name: "announcement"
+      file: "content/announcement.yml"
+
+      fields:
+
+        - {label: Enabled, name: enabled, widget: boolean, default: false}
+
+        - {label: Message, name: message, widget: text}
+
+        - {label: Link, name: link, widget: string, required: false}
+
+##############################################################################
+# CUSTOM CODE
+##############################################################################
+
+    - label: "Custom Code"
+      name: "customcode"
+      file: "content/custom.yml"
+
+      fields:
+
+        - {label: Header Code, name: head, widget: text, required: false}
+
+        - {label: Footer Code, name: footer, widget: text, required: false}
+
+##############################################################################
+# MAINTENANCE
+##############################################################################
+
+    - label: "Maintenance Mode"
+      name: "maintenance"
+      file: "content/maintenance.yml"
+
+      fields:
+
+        - {label: Enable Maintenance Mode, name: enabled, widget: boolean, default: false}
+
+        - {label: Maintenance Message, name: message, widget: text}
+
+##############################################################################
+# REDIRECTS
+##############################################################################
+
+- label: "Redirects"
+
+  name: "redirects"
+
+  folder: "content/redirects"
+
+  create: true
+
+  delete: true
+
+  extension: "yml"
+
+  fields:
+
+    - {label: From URL, name: from, widget: string}
+
+    - {label: To URL, name: to, widget: string}
+
+    - {label: Permanent (301), name: permanent, widget: boolean, default: true}
