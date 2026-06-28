@@ -342,3 +342,135 @@ collections:
       name: body
 
       widget: markdown
+##############################################################################
+# PAGES
+##############################################################################
+
+- label: "Pages"
+  name: "pages"
+  folder: "content/pages"
+  create: true
+  delete: true
+  extension: "md"
+  format: "frontmatter"
+  slug: "{{slug}}"
+
+  fields:
+
+    - {label: Title, name: title, widget: string}
+
+    - {label: Slug, name: slug, widget: string}
+
+    - {label: Description, name: description, widget: text, required: false}
+
+    - {label: Hero Image, name: hero, widget: image, required: false}
+
+    - {label: Show In Navigation, name: navigation, widget: boolean, default: false}
+
+    - {label: SEO Title, name: seo_title, widget: string, required: false}
+
+    - {label: SEO Description, name: seo_description, widget: text, required: false}
+
+    - {label: Body, name: body, widget: markdown}
+
+##############################################################################
+# AUTHORS
+##############################################################################
+
+- label: "Authors"
+  name: "authors"
+  folder: "content/authors"
+  create: true
+  delete: true
+  extension: "yml"
+
+  fields:
+
+    - {label: Name, name: name, widget: string}
+
+    - {label: Photo, name: photo, widget: image}
+
+    - {label: Bio, name: bio, widget: text}
+
+    - {label: Email, name: email, widget: string, required: false}
+
+    - {label: Facebook, name: facebook, widget: string, required: false}
+
+    - {label: Instagram, name: instagram, widget: string, required: false}
+
+    - {label: X, name: x, widget: string, required: false}
+
+    - {label: Website, name: website, widget: string, required: false}
+
+##############################################################################
+# CATEGORIES
+##############################################################################
+
+- label: "Categories"
+  name: "categories"
+  folder: "content/categories"
+  create: true
+  delete: true
+  extension: "yml"
+
+  fields:
+
+    - {label: Category Name, name: title, widget: string}
+
+    - {label: Slug, name: slug, widget: string}
+
+    - {label: Icon, name: icon, widget: image, required: false}
+
+    - {label: Description, name: description, widget: text, required: false}
+
+##############################################################################
+# PRIMARY MENU
+##############################################################################
+
+- label: "Navigation"
+  name: "navigation"
+
+  files:
+
+    - label: "Main Menu"
+      name: "mainmenu"
+      file: "content/navigation.yml"
+
+      fields:
+
+        - label: Menu Items
+          name: items
+          widget: list
+
+          fields:
+
+            - {label: Label, name: label, widget: string}
+
+            - {label: URL, name: url, widget: string}
+
+            - {label: Open In New Tab, name: blank, widget: boolean, default: false}
+
+##############################################################################
+# FOOTER MENU
+##############################################################################
+
+- label: "Footer Menu"
+  name: "footermenu"
+
+  files:
+
+    - label: "Footer"
+      name: "footerlinks"
+      file: "content/footer.yml"
+
+      fields:
+
+        - label: Links
+          name: items
+          widget: list
+
+          fields:
+
+            - {label: Label, name: label, widget: string}
+
+            - {label: URL, name: url, widget: string}
