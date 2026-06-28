@@ -1,1 +1,38 @@
-nn
+[
+  {
+    "slug": "welcome-to-the-raga-journal",
+    "title": "Welcome to The Raga Journal",
+    "description": "Introducing a new home for Indian classical music, culture and thoughtful journalism.",
+    "cover": "/uploads/welcome.jpg",
+    "category": "Editorial",
+    "author": "The Raga Journal",
+    "date": "2026-06-28",
+    "url": "/articles/welcome-to-the-raga-journal/",
+    "featured": true,
+    "editor": true,
+    "trending": true,
+    "video": false,
+    "tags": [
+      "Editorial",
+      "Music"
+    ]
+  },
+  {
+    "slug": "ustad-zakir-hussain-legacy",
+    "title": "The Timeless Legacy of Ustad Zakir Hussain",
+    "description": "A look at the artistry, innovation and global influence of one of the greatest tabla maestros.",
+    "cover": "/uploads/zakir.jpg",
+    "category": "Tabla",
+    "author": "The Raga Journal",
+    "date": "2026-06-28",
+    "url": "/articles/ustad-zakir-hussain-legacy/",
+    "featured": false,
+    "editor": true,
+    "trending": false,
+    "video": true,
+    "tags": [
+      "Tabla",
+      "Legend"
+    ]
+  }
+]
