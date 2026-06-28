@@ -2,6 +2,8 @@ backend:
   name: github
   repo: theragajournal/theragajournal
   branch: main
+  base_url: https://theragajournal.pages.dev
+  auth_endpoint: api/auth
 
 site_url: https://theragajournal.online
 display_url: https://theragajournal.online
@@ -9,16 +11,24 @@ display_url: https://theragajournal.online
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
 
+publish_mode: editorial_workflow
+
 collections:
   - name: "posts"
     label: "Posts"
+    label_singular: "Post"
     folder: "posts"
     create: true
+    delete: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     format: "frontmatter"
     extension: "md"
+
     fields:
       - { label: "Title", name: "title", widget: "string" }
+      - { label: "Slug", name: "slug", widget: "string", required: false }
       - { label: "Date", name: "date", widget: "datetime" }
-      - { label: "Featured Image", name: "thumbnail", widget: "image", required: false }
+      - { label: "Cover Image", name: "thumbnail", widget: "image", required: false }
+      - { label: "Tags", name: "tags", widget: "list", required: false }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false, required: false }
       - { label: "Body", name: "body", widget: "markdown" }
