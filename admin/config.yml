@@ -32,3 +32,17 @@ collections:
       - { label: "Tags", name: "tags", widget: "list", required: false }
       - { label: "Draft", name: "draft", widget: "boolean", default: false, required: false }
       - { label: "Body", name: "body", widget: "markdown" }
+  - name: "homepage"
+    label: "Homepage"
+    files:
+      - file: "content/home.yml"
+        label: "Homepage"
+        name: "homepage"
+        fields:
+          - { label: "Hero Title", name: "hero_title", widget: "string" }
+          - { label: "Hero Subtitle", name: "hero_subtitle", widget: "text" }
+          - { label: "Hero Image", name: "hero_image", widget: "image", required: false }
+          - { label: "Featured Story Title", name: "featured_title", widget: "string" }
+          - { label: "Featured Story Link", name: "featured_link", widget: "string" }
+          - { label: "Announcement", name: "announcement", widget: "text", required: false }
+          - { label: "Footer Text", name: "footer", widget: "text" }
