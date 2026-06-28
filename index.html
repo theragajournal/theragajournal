@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,232 +6,334 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Raga Journal</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link <link href="https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
 
-<style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-body{
-    background:#FFFFFF;
-    color:#FFFFFF;
-    font-family:Inter,sans-serif;
-    line-height:1.8;
-    -webkit-font-smoothing:antialiased;
-}
-
-.container{
-    width:min(92%,760px);
-    margin:auto;
-}
-
-header{
-    padding:70px 0 50px;
-    text-align:center;
-}
-
-.logo{
-    font-family:"Cormorant Garamond",serif;
-    font-size:clamp(3rem,8vw,5.5rem);
-    font-weight:600;
-    letter-spacing:1px;
-}
-
-.subtitle{
-    margin-top:12px;
-    color:#666;
-    font-size:clamp(.95rem,2vw,1.05rem);
-}
-
-nav{
-    display:flex;
-    justify-content:center;
-    gap:30px;
-    margin:40px 0;
-    flex-wrap:wrap;
-}
-
-nav a{
-    color:#444;
-    text-decoration:none;
-    font-size:.95rem;
-    transition:.3s;
-}
-
-nav a:hover{
-    color:#000;
-}
-
-.hero{
-    border-top:1px solid #ddd;
-    border-bottom:1px solid #ddd;
-    padding:70px 0;
-    text-align:center;
-}
-
-.hero h1{
-    font-family:"Cormorant Garamond",serif;
-    font-size:clamp(2rem,6vw,3.5rem);
-    font-weight:500;
-    margin-bottom:20px;
-}
-
-.hero p{
-    max-width:620px;
-    margin:auto;
-    color:#555;
-    font-size:1.05rem;
-}
-
-.button{
-    display:inline-block;
-    margin-top:35px;
-    padding:14px 34px;
-    border:1px solid #111;
-    color:#111;
-    text-decoration:none;
-    transition:.3s;
-}
-
-.button:hover{
-    background:#111;
-    color:#fff;
-}
-
-section{
-    padding:80px 0;
-}
-
-.section-title{
-    font-family:"Cormorant Garamond",serif;
-    font-size:2.1rem;
-    text-align:center;
-    margin-bottom:50px;
-}
-
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:30px;
-}
-
-.card{
-    background:#fff;
-    padding:30px;
-    border:1px solid #ececec;
-}
-
-.card h3{
-    font-family:"Cormorant Garamond",serif;
-    font-size:1.6rem;
-    margin-bottom:15px;
-}
-
-.card p{
-    color:#666;
-}
-
-footer{
-    border-top:1px solid #ddd;
-    text-align:center;
-    padding:40px 20px;
-    color:#777;
-    font-size:.9rem;
-}
-
-@media (max-width:600px){
-
-header{
-    padding:50px 0 30px;
-}
-
-.hero{
-    padding:50px 0;
-}
-
-section{
-    padding:60px 0;
-}
-
-nav{
-    gap:18px;
-}
-
-}
-</style>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
 
-<header class="container">
+<header class="site-header">
+    <div class="container">
 
-<div class="logo">The Raga Journal</div>
+        <a class="logo" href="/">
+            <img id="logo" alt="">
+        </a>
 
-<p class="subtitle">
-A quiet place dedicated to Indian Classical Music, tradition, stories and thoughtful listening.
-</p>
+        <nav id="menu"></nav>
 
-<nav>
-<a href="#">Home</a>
-<a href="#">Articles</a>
-<a href="#">Ragas</a>
-<a href="#">Artists</a>
-<a href="#">About</a>
-</nav>
-
+    </div>
 </header>
 
-<section class="hero">
+<main>
 
-<div class="container">
+<section id="hero" class="hero"></section>
 
-<h1>Where Every Raga Has A Story.</h1>
+<section id="announcement"></section>
 
-<p>
-Simple, timeless and distraction-free. Read about ragas, instruments, musicians, concerts and the rich heritage of Indian classical music.
-</p>
+<section class="wrapper">
 
-<a href="#" class="button">Start Reading</a>
+<div class="section">
+
+<h2>Featured Story</h2>
+
+<div id="featured"></div>
 
 </div>
+
+<div class="section">
+
+<h2>Editor's Picks</h2>
+
+<div id="editors" class="grid"></div>
+
+</div>
+
+<div class="section">
+
+<h2>Trending</h2>
+
+<div id="trending" class="grid"></div>
+
+</div>
+
+<div class="section">
+
+<h2>Latest Articles</h2>
+
+<div id="latest" class="grid"></div>
+
+</div>
+
+<div class="section">
+
+<h2>Categories</h2>
+
+<div id="categories" class="chips"></div>
+
+</div>
+
+<div class="section">
+
+<h2>Gallery</h2>
+
+<div id="gallery" class="gallery"></div>
+
+</div>
+
+<div class="section">
+
+<h2>Videos</h2>
+
+<div id="videos" class="grid"></div>
+
+</div>
+
+<section id="newsletter"></section>
 
 </section>
 
-<section class="container">
+</main>
 
-<h2 class="section-title">Latest Journal</h2>
+<footer id="footer"></footer>
 
-<div class="grid">
+<script>
 
-<div class="card">
-<h3>The Morning Ragas</h3>
-<p>Exploring the peaceful soundscape that welcomes the beginning of the day.</p>
+let HOME={};
+let POSTS=[];
+
+async function loadHome(){
+
+const text=await fetch("/content/homepage.yml").then(r=>r.text());
+
+HOME=jsyaml.load(text);
+
+document.title=HOME.site.title;
+
+document.getElementById("logo").src=HOME.site.logo;
+
+renderHero();
+
+renderCategories();
+
+renderFooter();
+
+renderNewsletter();
+
+}
+
+async function loadPosts(){
+
+const response=await fetch("/content/articles/index.json");
+
+POSTS=await response.json();
+
+renderFeatured();
+
+renderLatest();
+
+renderTrending();
+
+renderEditors();
+
+renderGallery();
+
+renderVideos();
+
+}
+
+function card(post){
+
+return `
+<a class="card" href="${post.url}">
+
+<img src="${post.cover}" loading="lazy">
+
+<div class="content">
+
+<div class="category">${post.category}</div>
+
+<h3>${post.title}</h3>
+
+<p>${post.description}</p>
+
 </div>
 
-<div class="card">
-<h3>Voices of Tradition</h3>
-<p>Stories of legendary musicians and the timeless legacy they continue to inspire.</p>
+</a>
+`;
+
+}
+
+function renderHero(){
+
+if(!HOME.hero.enabled)return;
+
+document.getElementById("hero").innerHTML=`
+
+<div class="hero-image">
+
+<img src="${HOME.hero.image}">
+
 </div>
 
-<div class="card">
-<h3>Beyond Performance</h3>
-<p>Essays, reflections and conversations celebrating music as a lifelong practice.</p>
-</div>
+<div class="hero-content">
+
+<h1>${HOME.hero.title}</h1>
+
+<p>${HOME.hero.subtitle}</p>
+
+<a class="button" href="${HOME.hero.button_link}">
+${HOME.hero.button_text}
+</a>
 
 </div>
 
-</section>
+`;
 
-<footer>
+}
 
-© 2026 The Raga Journal — Minimal. Elegant. Timeless.
+function renderFeatured(){
 
-</footer>
+const post=POSTS.find(x=>x.slug===HOME.featured.article);
+
+if(!post)return;
+
+document.getElementById("featured").innerHTML=card(post);
+
+}
+
+function renderLatest(){
+
+document.getElementById("latest").innerHTML=
+
+POSTS
+
+.slice(0,HOME.latest.limit)
+
+.map(card)
+
+.join("");
+
+}
+
+function renderTrending(){
+
+document.getElementById("trending").innerHTML=
+
+POSTS
+
+.filter(p=>p.trending)
+
+.slice(0,HOME.trending.limit)
+
+.map(card)
+
+.join("");
+
+}
+
+function renderEditors(){
+
+document.getElementById("editors").innerHTML=
+
+POSTS
+
+.filter(p=>p.editor)
+
+.slice(0,HOME.editors_pick.limit)
+
+.map(card)
+
+.join("");
+
+}
+
+function renderCategories(){
+
+document.getElementById("categories").innerHTML=
+
+HOME.categories.items
+
+.map(c=>`<a href="/category/${c}">${c}</a>`)
+
+.join("");
+
+}
+
+function renderGallery(){
+
+document.getElementById("gallery").innerHTML=
+
+POSTS
+
+.filter(p=>p.cover)
+
+.slice(0,HOME.gallery.limit)
+
+.map(p=>`<img src="${p.cover}">`)
+
+.join("");
+
+}
+
+function renderVideos(){
+
+document.getElementById("videos").innerHTML=
+
+POSTS
+
+.filter(p=>p.video)
+
+.slice(0,HOME.videos.limit)
+
+.map(card)
+
+.join("");
+
+}
+
+function renderNewsletter(){
+
+if(!HOME.newsletter.enabled)return;
+
+document.getElementById("newsletter").innerHTML=`
+
+<h2>${HOME.newsletter.title}</h2>
+
+<p>${HOME.newsletter.text}</p>
+
+<form>
+
+<input placeholder="Email">
+
+<button>Subscribe</button>
+
+</form>
+
+`;
+
+}
+
+function renderFooter(){
+
+document.getElementById("footer").innerHTML=`
+
+<p>${HOME.footer.copyright}</p>
+
+`;
+
+}
+
+Promise.all([
+
+loadHome(),
+
+loadPosts()
+
+]);
+
+</script>
 
 </body>
 </html>
