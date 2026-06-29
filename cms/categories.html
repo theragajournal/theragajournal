@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Categories & Tags · The Raga Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/css/tokens.css" />
+<link rel="stylesheet" href="../assets/css/shell.css" />
+<style>
+  .add-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tax-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+  .tax-row .del { background: none; border: none; cursor: pointer; color: var(--ink-faint); padding: 4px; }
+  .tax-row .del:hover { color: var(--rust); }
+  .tag-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--paper-dim); color: var(--ink-soft); font-size: 13px; padding: 6px 12px; border-radius: 999px; }
+  .tag-chip button { background: none; border: none; cursor: pointer; color: var(--ink-faint); display: flex; }
+  .tag-chip button:hover { color: var(--rust); }
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+</style>
+</head>
+<body>
+<div id="app-shell"></div>
+
+<script src="../assets/js/github.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/markdown.js"></script>
+<script src="../assets/js/util.js"></script>
+<script src="../assets/js/shell.js"></script>
+<script>
+  const session = Shell.mount('categories');
+  if (session) {
+    const { account, target } = session;
+    const root = Shell.pageRoot();
+    const CONFIG_PATH = 'config/taxonomy.json';
+
+    root.innerHTML = `
+      <div class="page narrow rise-in">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <h1 class="font-display" style="font-size:28px;">Categories &amp; Tags</h1>
+          <span id="savingLabel" style="display:none;font-size:12px;color:var(--ink-faint);"><span class="spinner"></span> Saving to GitHub</span>
+        </div>
+        <p class="faint" style="font-size:13.5px;margin:0 0 28px;">Stored at <code class="mono" style="background:var(--paper-dim);padding:1px 5px;border-radius:4px;">${CONFIG_PATH}</code></p>
+
+        <section style="margin-bottom:40px;">
+          <h2 class="font-display" style="font-size:18px;margin-bottom:12px;">Categories</h2>
+          <div class="add-row">
+            <input id="newCategoryInput" class="input" placeholder="New category name" />
+            <button id="addCategoryBtn" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+              Add
+            </button>
+          </div>
+          <div class="panel divide" id="categoryList"><div class="center-loading"><span class="spinner"></span> Loading...</div></div>
+        </section>
+
+        <section>
+          <h2 class="font-display" style="font-size:18px;margin-bottom:12px;">Tags</h2>
+          <div class="add-row">
+            <input id="newTagInput" class="input" placeholder="New tag name" />
+            <button id="addTagBtn" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+              Add
+            </button>
+          </div>
+          <div class="tags-wrap" id="tagList"></div>
+        </section>
+      </div>
+    `;
+
+    let data = { categories: [], tags: [] };
+    let sha = undefined;
+
+    function renderCategories() {
+      const list = document.getElementById('categoryList');
+      if (data.categories.length === 0) {
+        list.innerHTML = `<div class="empty-row">No categories yet.</div>`;
+        return;
+      }
+      list.innerHTML = data.categories.map((cat) => `
+        <div class="tax-row">
+          <div>
+            <div style="font-size:13.5px;">${escapeHtml(cat.name)}</div>
+            <div style="font-size:11px;color:var(--ink-faint);" class="mono">/${escapeHtml(cat.slug)}</div>
+          </div>
+          <button class="del" data-id="${cat.id}" data-kind="category">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function renderTags() {
+      const list = document.getElementById('tagList');
+      if (data.tags.length === 0) {
+        list.innerHTML = `<p class="faint" style="font-size:13.5px;">No tags yet.</p>`;
+        return;
+      }
+      list.innerHTML = data.tags.map((tag) => `
+        <span class="tag-chip">
+          ${escapeHtml(tag.name)}
+          <button data-id="${tag.id}" data-kind="tag">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </span>
+      `).join('');
+    }
+
+    async function persist(message) {
+      document.getElementById('savingLabel').style.display = 'inline-flex';
+      try {
+        const result = await window.GitHubAPI.putFile(
+          account.token, target.owner, target.repo, target.branch,
+          CONFIG_PATH, JSON.stringify(data, null, 2), message, sha
+        );
+        sha = result.content.sha;
+      } catch (err) {
+        toast(err.message || 'Could not save taxonomy.', 'error');
+      } finally {
+        document.getElementById('savingLabel').style.display = 'none';
+      }
+    }
+
+    document.getElementById('addCategoryBtn').addEventListener('click', async () => {
+      const input = document.getElementById('newCategoryInput');
+      const name = input.value.trim();
+      if (!name) return;
+      data.categories.push({ id: crypto.randomUUID(), name, slug: window.MD.slugify(name), order: data.categories.length });
+      input.value = '';
+      renderCategories();
+      await persist(`Add category: ${name}`);
+    });
+
+    document.getElementById('categoryList').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-kind="category"]');
+      if (!btn) return;
+      const cat = data.categories.find((c) => c.id === btn.dataset.id);
+      data.categories = data.categories.filter((c) => c.id !== btn.dataset.id);
+      renderCategories();
+      await persist(`Remove category: ${cat ? cat.name : btn.dataset.id}`);
+    });
+
+    document.getElementById('addTagBtn').addEventListener('click', async () => {
+      const input = document.getElementById('newTagInput');
+      const name = input.value.trim();
+      if (!name) return;
+      data.tags.push({ id: crypto.randomUUID(), name, slug: window.MD.slugify(name) });
+      input.value = '';
+      renderTags();
+      await persist(`Add tag: ${name}`);
+    });
+
+    document.getElementById('tagList').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-kind="tag"]');
+      if (!btn) return;
+      const tag = data.tags.find((t) => t.id === btn.dataset.id);
+      data.tags = data.tags.filter((t) => t.id !== btn.dataset.id);
+      renderTags();
+      await persist(`Remove tag: ${tag ? tag.name : btn.dataset.id}`);
+    });
+
+    ['newCategoryInput'].forEach(id => document.getElementById(id).addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('addCategoryBtn').click();
+    }));
+    document.getElementById('newTagInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('addTagBtn').click();
+    });
+
+    (async () => {
+      try {
+        const file = await window.GitHubAPI.getFile(account.token, target.owner, target.repo, target.branch, CONFIG_PATH);
+        if (file) {
+          data = JSON.parse(file.content);
+          sha = file.sha;
+        }
+      } catch { /* use defaults */ }
+      renderCategories();
+      renderTags();
+    })();
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Articles · The Raga Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/css/tokens.css" />
+<link rel="stylesheet" href="../assets/css/shell.css" />
+<style>
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .search-box { position: relative; max-width: 260px; flex: 1; }
+  .search-box svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--ink-faint); }
+  .search-box input { padding-left: 32px; }
+  .filter-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 13px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    background: var(--paper-dim); color: var(--ink-soft); border: none; cursor: pointer;
+    transition: background-color 0.15s;
+  }
+  .pill.active { background: var(--ink); color: var(--paper); }
+  .pill:hover:not(.active) { background: var(--hairline); }
+  .article-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 15px 18px; }
+  .article-row:hover { background: rgba(28,27,25,0.02); }
+  .article-row .open-btn { flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer; padding: 0; }
+  .article-row .ttl-line { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+  .article-row .ttl { font-size: 13.5px; font-weight: 500; }
+  .article-row .preview { font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .article-row .path-line { font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
+  .article-row .del-btn { opacity: 0; background: none; border: none; cursor: pointer; color: var(--ink-faint); padding: 6px; flex-shrink: 0; transition: opacity 0.15s, color 0.15s; }
+  .article-row:hover .del-btn { opacity: 1; }
+  .article-row .del-btn:hover { color: var(--rust); }
+  .featured-flag { font-size: 11px; color: var(--brass-600); font-weight: 500; }
+</style>
+</head>
+<body>
+<div id="app-shell"></div>
+
+<script src="../assets/js/github.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/markdown.js"></script>
+<script src="../assets/js/util.js"></script>
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/articles.js"></script>
+<script>
+  const session = Shell.mount('articles');
+  if (session) {
+    const { account, target } = session;
+    const root = Shell.pageRoot();
+
+    const FILTERS = [
+      { key: 'all', label: 'All' },
+      { key: 'draft', label: 'Drafts' },
+      { key: 'review', label: 'In review' },
+      { key: 'scheduled', label: 'Scheduled' },
+      { key: 'published', label: 'Published' },
+      { key: 'archived', label: 'Archived' },
+    ];
+
+    root.innerHTML = `
+      <div class="page rise-in">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h1 class="font-display" style="font-size:28px;">Articles</h1>
+          <a href="editor.html" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+            New article
+          </a>
+        </div>
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="searchInput" class="input" placeholder="Search titles..." />
+          </div>
+          <div class="filter-pills" id="filterPills">
+            ${FILTERS.map(f => `<button class="pill ${f.key === 'all' ? 'active' : ''}" data-filter="${f.key}">${f.label}</button>`).join('')}
+          </div>
+        </div>
+        <div id="errorBox" class="alert alert-error" style="display:none;"></div>
+        <div class="panel divide" id="articleList">
+          <div class="center-loading"><span class="spinner"></span> Loading articles...</div>
+        </div>
+      </div>
+    `;
+
+    let allItems = [];
+    let currentFilter = 'all';
+    let currentQuery = '';
+
+    function render() {
+      const list = document.getElementById('articleList');
+      const filtered = allItems.filter((a) => {
+        if (currentFilter !== 'all' && a.frontmatter.status !== currentFilter) return false;
+        if (currentQuery && !a.frontmatter.title.toLowerCase().includes(currentQuery.toLowerCase())) return false;
+        return true;
+      });
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="empty-row">No articles match these filters.</div>`;
+        return;
+      }
+      list.innerHTML = filtered.map((a) => `
+        <div class="article-row" data-path="${escapeHtml(a.path)}">
+          <button class="open-btn" data-open="${escapeHtml(a.path)}">
+            <div class="ttl-line">
+              <span class="ttl">${escapeHtml(a.frontmatter.title)}</span>
+              <span class="badge badge-${a.frontmatter.status}">${a.frontmatter.status}</span>
+              ${a.frontmatter.featured ? '<span class="featured-flag">★ Featured</span>' : ''}
+            </div>
+            <div class="preview">${escapeHtml(a.preview)}</div>
+            <div class="path-line mono">${escapeHtml(a.path)} · updated ${timeAgo(a.frontmatter.updatedAt)}</div>
+          </button>
+          <button class="del-btn" data-delete="${escapeHtml(a.path)}" title="Delete">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+          </button>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('[data-open]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          location.href = `editor.html?path=${encodeURIComponent(btn.dataset.open)}`;
+        });
+      });
+      list.querySelectorAll('[data-delete]').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const path = btn.dataset.delete;
+          const item = allItems.find((a) => a.path === path);
+          if (!item) return;
+          if (!confirm(`Delete "${item.frontmatter.title}"? This commits a deletion to GitHub.`)) return;
+          btn.innerHTML = '<span class="spinner"></span>';
+          try {
+            await Articles.remove(account.token, target.owner, target.repo, target.branch, item);
+            allItems = allItems.filter((a) => a.path !== path);
+            toast('Article deleted');
+            render();
+          } catch (err) {
+            toast(err.message || 'Could not delete this article.', 'error');
+            render();
+          }
+        });
+      });
+    }
+
+    document.getElementById('filterPills').addEventListener('click', (e) => {
+      const btn = e.target.closest('.pill');
+      if (!btn) return;
+      currentFilter = btn.dataset.filter;
+      document.querySelectorAll('.pill').forEach((p) => p.classList.toggle('active', p === btn));
+      render();
+    });
+
+    document.getElementById('searchInput').addEventListener('input', debounce((e) => {
+      currentQuery = e.target.value;
+      render();
+    }, 150));
+
+    (async () => {
+      try {
+        allItems = await Articles.list(account.token, target.owner, target.repo, target.branch);
+        render();
+      } catch (err) {
+        document.getElementById('errorBox').textContent = err.message || 'Could not load articles.';
+        document.getElementById('errorBox').style.display = 'block';
+        document.getElementById('articleList').innerHTML = '';
+      }
+    })();
+  }
+</script>
+</body>
+</html>

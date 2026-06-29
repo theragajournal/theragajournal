@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Write · The Raga Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/css/tokens.css" />
+<link rel="stylesheet" href="../assets/css/shell.css" />
+<style>
+  body { overflow: hidden; }
+  .editor-shell { display: flex; height: 100vh; }
+  .editor-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+  .editor-head { padding: 32px 40px 0; max-width: 720px; margin: 0 auto; width: 100%; }
+  .title-input {
+    width: 100%; border: none; outline: none; background: none;
+    font-family: 'Fraunces', serif; font-size: 36px; font-weight: 500;
+    color: var(--ink); padding: 0;
+  }
+  .title-input::placeholder { color: rgba(28,27,25,0.3); }
+  .meta-line { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-faint); margin: 10px 0 18px; }
+  .meta-line span:not(:last-child)::after { content: '·'; margin-left: 10px; color: var(--hairline); }
+
+  .toolbar {
+    display: flex; align-items: center; gap: 2px; padding: 8px 16px;
+    border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+    overflow-x: auto; position: sticky; top: 0; background: rgba(250,248,244,0.95);
+    backdrop-filter: blur(4px); z-index: 5;
+  }
+  .tb-btn {
+    background: none; border: none; padding: 7px; border-radius: 6px; cursor: pointer;
+    color: var(--ink-soft); display: flex; align-items: center; flex-shrink: 0;
+  }
+  .tb-btn:hover { background: var(--paper-dim); }
+  .tb-btn.active { background: var(--ink); color: var(--paper); }
+  .tb-sep { width: 1px; height: 18px; background: var(--hairline); margin: 0 5px; flex-shrink: 0; }
+
+  .editor-body-wrap { padding: 28px 40px 100px; max-width: 720px; margin: 0 auto; width: 100%; flex: 1; }
+  #editorBody {
+    outline: none; font-size: 18px; line-height: 1.75; color: var(--ink-soft); min-height: 50vh;
+  }
+  #editorBody:empty::before { content: attr(data-placeholder); color: rgba(28,27,25,0.3); }
+  #editorBody h1 { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 500; margin: 32px 0 14px; color: var(--ink); line-height: 1.2; }
+  #editorBody h2 { font-family: 'Fraunces', serif; font-size: 27px; font-weight: 500; margin: 28px 0 12px; color: var(--ink); line-height: 1.25; }
+  #editorBody h3 { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; margin: 24px 0 10px; color: var(--ink); }
+  #editorBody p { margin: 0 0 16px; }
+  #editorBody blockquote { border-left: 2px solid var(--brass-500); padding-left: 16px; margin: 20px 0; font-style: italic; color: var(--ink-soft); }
+  #editorBody pre { background: var(--ink); color: var(--paper); border-radius: 6px; padding: 16px; overflow-x: auto; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; margin: 18px 0; }
+  #editorBody code { background: var(--paper-dim); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; font-family: 'JetBrains Mono', monospace; }
+  #editorBody pre code { background: none; padding: 0; }
+  #editorBody ul, #editorBody ol { margin: 0 0 16px; padding-left: 26px; }
+  #editorBody img { max-width: 100%; border-radius: 6px; margin: 20px 0; display: block; }
+  #editorBody hr { border: none; border-top: 1px solid var(--hairline); margin: 32px 0; }
+  #editorBody a { color: var(--brass-600); text-decoration: underline; }
+  #editorBody table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 14px; }
+  #editorBody table td, #editorBody table th { border: 1px solid var(--hairline); padding: 8px 10px; }
+  #editorBody table th { background: var(--paper-dim); text-align: left; }
+
+  /* Sidebar */
+  .meta-sidebar { width: 320px; flex-shrink: 0; border-left: 1px solid var(--hairline); overflow-y: auto; background: rgba(243,239,231,0.3); }
+  .meta-sidebar-inner { padding: 20px; }
+  .meta-sidebar-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .meta-sidebar-head h3 { font-size: 15px; }
+  .meta-sidebar-head button { background: none; border: none; cursor: pointer; color: var(--ink-faint); padding: 4px; }
+  .field { margin-bottom: 18px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink-soft); margin-bottom: 10px; }
+  .checkbox-row input { width: auto; }
+  details summary { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); cursor: pointer; margin-bottom: 10px; }
+
+  .save-bar {
+    position: fixed; bottom: 0; left: 256px; right: 320px; border-top: 1px solid var(--hairline);
+    background: rgba(250,248,244,0.97); backdrop-filter: blur(6px); padding: 12px 24px;
+    display: flex; align-items: center; gap: 16px; z-index: 20;
+  }
+  @media (max-width: 860px) { .save-bar { left: 0; right: 0; } .meta-sidebar { display: none; } }
+  .sync-indicator { flex: 1; display: flex; align-items: center; gap: 10px; }
+  .sync-indicator .drone-rule { flex: 1; }
+  .sync-label { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
+  .sync-label.error { color: var(--rust); }
+
+  .reopen-sidebar-btn {
+    position: fixed; top: 16px; right: 16px; z-index: 30; background: #fff;
+    border: 1px solid var(--hairline); border-radius: 8px; padding: 8px; cursor: pointer; display: none;
+  }
+</style>
+</head>
+<body>
+<div id="app-shell"></div>
+
+<script src="../assets/js/github.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/markdown.js"></script>
+<script src="../assets/js/util.js"></script>
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/articles.js"></script>
+<script src="../assets/js/media.js"></script>
+<script>
+  const session = Shell.mount(''); // no active nav item while writing
+  if (session) {
+    const { account, target } = session;
+    const root = Shell.pageRoot();
+    root.style.padding = '0';
+    root.style.height = '100vh';
+    root.style.overflow = 'hidden';
+
+    const params = new URLSearchParams(location.search);
+    const existingPath = params.get('path');
+
+    const STATUS_OPTIONS = ['draft', 'review', 'scheduled', 'published', 'archived'];
+
+    root.innerHTML = `
+      <div class="editor-shell">
+        <div class="editor-main scroll">
+          <div class="editor-head">
+            <input id="titleInput" class="title-input font-display" placeholder="Article title" />
+            <div class="meta-line">
+              <span class="mono" id="slugDisplay">/untitled</span>
+              <span id="wordCount">0 words</span>
+              <span id="readTime">1 min read</span>
+            </div>
+          </div>
+
+          <div class="toolbar" id="toolbar">
+            <button class="tb-btn" data-cmd="undo" title="Undo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 7"/></svg></button>
+            <button class="tb-btn" data-cmd="redo" title="Redo"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 7"/></svg></button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-cmd="bold" title="Bold"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h8a4 4 0 0 1 0 8H6V4Zm0 8h9a4 4 0 0 1 0 8H6v-8Z"/></svg></button>
+            <button class="tb-btn" data-cmd="italic" title="Italic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4h-9M14 20H5M15 4 9 20"/></svg></button>
+            <button class="tb-btn" data-cmd="strikeThrough" title="Strikethrough"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M8 6.5A3.5 3.5 0 0 1 11.5 4h1A3.5 3.5 0 0 1 16 6.5M8 17.5A3.5 3.5 0 0 0 11.5 20h1a3.5 3.5 0 0 0 3.5-2.5"/></svg></button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-block="h1" title="Heading 1"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6v12M12 6v12M4 12h8M17 18v-7l-2 2"/></svg></button>
+            <button class="tb-btn" data-block="h2" title="Heading 2"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6v12M12 6v12M4 12h8M15 10.5a1.5 1.5 0 1 1 3 1.5L15 18h4"/></svg></button>
+            <button class="tb-btn" data-block="h3" title="Heading 3"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6v12M12 6v12M4 12h8"/></svg></button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" data-block="blockquote" title="Quote"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h5v5H4a1 1 0 0 1-1-1V7Zm0 9h5M13 7h5v5h-4a1 1 0 0 1-1-1V7Zm0 9h5"/></svg></button>
+            <button class="tb-btn" data-block="pre" title="Code block"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 9-4 3 4 3m8-6 4 3-4 3"/></svg></button>
+            <button class="tb-btn" data-cmd="insertUnorderedList" title="Bullet list"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/><path d="M9 6h11M9 12h11M9 18h11"/></svg></button>
+            <button class="tb-btn" data-cmd="insertOrderedList" title="Numbered list"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h1v4M4 14h2l-2 2.5h2M9 6h11M9 12h11M9 18h11"/></svg></button>
+            <div class="tb-sep"></div>
+            <button class="tb-btn" id="insertTableBtn" title="Insert table"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></button>
+            <button class="tb-btn" id="insertLinkBtn" title="Insert link"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 10h2a5 5 0 0 0 0-10h-2M8 12h8"/></svg></button>
+            <button class="tb-btn" id="insertImageBtn" title="Insert image"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></button>
+            <button class="tb-btn" data-block="hr" title="Divider"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg></button>
+          </div>
+
+          <div class="editor-body-wrap">
+            <div id="editorBody" contenteditable="true" data-placeholder="Begin writing your article…"></div>
+          </div>
+        </div>
+
+        <aside class="meta-sidebar scroll" id="metaSidebar">
+          <div class="meta-sidebar-inner">
+            <div class="meta-sidebar-head">
+              <h3 class="font-display">Article settings</h3>
+              <button id="closeSidebarBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Status</label>
+              <select id="statusSelect" class="input">
+                ${STATUS_OPTIONS.map(s => `<option value="${s}">${s[0].toUpperCase()+s.slice(1)}</option>`).join('')}
+              </select>
+            </div>
+
+            <div class="field" id="scheduleField" style="display:none;">
+              <label class="field-label">Scheduled for</label>
+              <input id="scheduledFor" type="datetime-local" class="input" />
+            </div>
+
+            <div class="field">
+              <label class="field-label">Slug</label>
+              <input id="slugInput" class="input mono" />
+            </div>
+
+            <div class="field">
+              <label class="field-label">Excerpt</label>
+              <textarea id="excerptInput" class="input" rows="3" style="resize:none;" placeholder="A short summary for previews and feeds"></textarea>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Categories</label>
+              <input id="categoriesInput" class="input" placeholder="Tabla, Interviews" />
+            </div>
+
+            <div class="field">
+              <label class="field-label">Tags</label>
+              <input id="tagsInput" class="input" placeholder="raga, live-review" />
+            </div>
+
+            <div class="field" style="display:flex; gap:18px;">
+              <label class="checkbox-row"><input type="checkbox" id="featuredCheck" /> Featured</label>
+              <label class="checkbox-row"><input type="checkbox" id="pinnedCheck" /> Pinned</label>
+            </div>
+
+            <details>
+              <summary>SEO</summary>
+              <div class="field">
+                <input id="metaDescInput" class="input" placeholder="Meta description" style="margin-bottom:10px;" />
+                <input id="canonicalInput" class="input" placeholder="Canonical URL" style="margin-bottom:10px;" />
+                <label class="checkbox-row"><input type="checkbox" id="noindexCheck" /> No-index this page</label>
+              </div>
+            </details>
+          </div>
+        </aside>
+      </div>
+
+      <button class="reopen-sidebar-btn" id="reopenSidebarBtn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6m11-7h-6M7 12H1m17.4-7.4-4.2 4.2m-7.4 7.4-4.2 4.2m15.8 0-4.2-4.2M7.8 7.8 3.6 3.6"/></svg>
+      </button>
+
+      <div class="save-bar">
+        <div class="sync-indicator">
+          <div class="drone-rule" id="droneRule"></div>
+          <span class="sync-label" id="syncLabel"></span>
+        </div>
+        <button class="btn btn-primary" id="saveBtn">Commit to GitHub</button>
+      </div>
+
+      <input type="file" id="imageFileInput" accept="image/*" style="display:none;" />
+    `;
+
+    // ---------- State ----------
+    let frontmatter = window.MD.DEFAULT_FRONTMATTER();
+    let slugTouched = false;
+    let currentPath = existingPath;
+    let currentSha = null;
+
+    const editorBody = document.getElementById('editorBody');
+    const titleInput = document.getElementById('titleInput');
+    const slugInput = document.getElementById('slugInput');
+    const slugDisplay = document.getElementById('slugDisplay');
+
+    function refreshWordCount() {
+      const text = editorBody.innerText || '';
+      const words = window.MD.countWords(text);
+      document.getElementById('wordCount').textContent = `${words} words`;
+      document.getElementById('readTime').textContent = `${window.MD.estimateReadingTime(text)} min read`;
+    }
+
+    function syncFrontmatterToForm() {
+      titleInput.value = frontmatter.title || '';
+      slugInput.value = frontmatter.slug || '';
+      slugDisplay.textContent = '/' + (frontmatter.slug || 'untitled');
+      document.getElementById('statusSelect').value = frontmatter.status || 'draft';
+      document.getElementById('scheduleField').style.display = frontmatter.status === 'scheduled' ? 'block' : 'none';
+      document.getElementById('scheduledFor').value = frontmatter.scheduledFor ? frontmatter.scheduledFor.slice(0,16) : '';
+      document.getElementById('excerptInput').value = frontmatter.excerpt || '';
+      document.getElementById('categoriesInput').value = (frontmatter.categories || []).join(', ');
+      document.getElementById('tagsInput').value = (frontmatter.tags || []).join(', ');
+      document.getElementById('featuredCheck').checked = !!frontmatter.featured;
+      document.getElementById('pinnedCheck').checked = !!frontmatter.pinned;
+      document.getElementById('metaDescInput').value = (frontmatter.seo && frontmatter.seo.metaDescription) || '';
+      document.getElementById('canonicalInput').value = (frontmatter.seo && frontmatter.seo.canonicalUrl) || '';
+      document.getElementById('noindexCheck').checked = !!(frontmatter.seo && frontmatter.seo.noindex);
+    }
+
+    // ---------- Load existing article, if any ----------
+    if (existingPath) {
+      editorBody.innerHTML = '<p class="faint">Loading…</p>';
+      Articles.load(account.token, target.owner, target.repo, target.branch, existingPath)
+        .then((article) => {
+          if (!article) {
+            toast('That article could not be found.', 'error');
+            editorBody.innerHTML = '';
+            return;
+          }
+          frontmatter = article.frontmatter;
+          currentSha = article.sha;
+          currentPath = article.path;
+          slugTouched = true;
+          syncFrontmatterToForm();
+          editorBody.innerHTML = article.body;
+          refreshWordCount();
+        })
+        .catch((err) => {
+          toast(err.message || 'Could not load this article.', 'error');
+          editorBody.innerHTML = '';
+        });
+    } else {
+      syncFrontmatterToForm();
+    }
+
+    // ---------- Title / slug binding ----------
+    titleInput.addEventListener('input', () => {
+      frontmatter.title = titleInput.value;
+      if (!slugTouched) {
+        frontmatter.slug = window.MD.slugify(titleInput.value);
+        slugInput.value = frontmatter.slug;
+        slugDisplay.textContent = '/' + (frontmatter.slug || 'untitled');
+      }
+    });
+    slugInput.addEventListener('input', () => {
+      slugTouched = true;
+      frontmatter.slug = window.MD.slugify(slugInput.value);
+      slugInput.value = frontmatter.slug;
+      slugDisplay.textContent = '/' + (frontmatter.slug || 'untitled');
+    });
+
+    // ---------- Sidebar field binding ----------
+    document.getElementById('statusSelect').addEventListener('change', (e) => {
+      frontmatter.status = e.target.value;
+      document.getElementById('scheduleField').style.display = e.target.value === 'scheduled' ? 'block' : 'none';
+    });
+    document.getElementById('scheduledFor').addEventListener('change', (e) => {
+      frontmatter.scheduledFor = e.target.value ? new Date(e.target.value).toISOString() : '';
+    });
+    document.getElementById('excerptInput').addEventListener('input', (e) => { frontmatter.excerpt = e.target.value; });
+    document.getElementById('categoriesInput').addEventListener('input', (e) => {
+      frontmatter.categories = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+    });
+    document.getElementById('tagsInput').addEventListener('input', (e) => {
+      frontmatter.tags = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+    });
+    document.getElementById('featuredCheck').addEventListener('change', (e) => { frontmatter.featured = e.target.checked; });
+    document.getElementById('pinnedCheck').addEventListener('change', (e) => { frontmatter.pinned = e.target.checked; });
+    document.getElementById('metaDescInput').addEventListener('input', (e) => {
+      frontmatter.seo = { ...frontmatter.seo, metaDescription: e.target.value };
+    });
+    document.getElementById('canonicalInput').addEventListener('input', (e) => {
+      frontmatter.seo = { ...frontmatter.seo, canonicalUrl: e.target.value };
+    });
+    document.getElementById('noindexCheck').addEventListener('change', (e) => {
+      frontmatter.seo = { ...frontmatter.seo, noindex: e.target.checked };
+    });
+
+    // ---------- Sidebar collapse ----------
+    document.getElementById('closeSidebarBtn').addEventListener('click', () => {
+      document.getElementById('metaSidebar').style.display = 'none';
+      document.querySelector('.save-bar').style.right = '0';
+      document.getElementById('reopenSidebarBtn').style.display = 'block';
+    });
+    document.getElementById('reopenSidebarBtn').addEventListener('click', () => {
+      document.getElementById('metaSidebar').style.display = 'block';
+      document.querySelector('.save-bar').style.right = '320px';
+      document.getElementById('reopenSidebarBtn').style.display = 'none';
+    });
+
+    // ---------- Toolbar ----------
+    editorBody.addEventListener('input', refreshWordCount);
+
+    document.getElementById('toolbar').addEventListener('click', (e) => {
+      const btn = e.target.closest('.tb-btn');
+      if (!btn) return;
+      editorBody.focus();
+      if (btn.dataset.cmd) {
+        document.execCommand(btn.dataset.cmd, false, null);
+      } else if (btn.dataset.block) {
+        const tag = btn.dataset.block;
+        if (tag === 'hr') {
+          document.execCommand('insertHorizontalRule');
+        } else if (tag === 'pre') {
+          document.execCommand('formatBlock', false, 'PRE');
+        } else if (tag === 'blockquote') {
+          document.execCommand('formatBlock', false, 'BLOCKQUOTE');
+        } else {
+          document.execCommand('formatBlock', false, tag.toUpperCase());
+        }
+      }
+      refreshWordCount();
+    });
+
+    document.getElementById('insertLinkBtn').addEventListener('click', () => {
+      const url = prompt('Link URL');
+      if (url) {
+        editorBody.focus();
+        document.execCommand('createLink', false, url);
+      }
+    });
+
+    document.getElementById('insertTableBtn').addEventListener('click', () => {
+      const html = `<table><tr><th>Header</th><th>Header</th></tr><tr><td>Cell</td><td>Cell</td></tr><tr><td>Cell</td><td>Cell</td></tr></table><p><br></p>`;
+      editorBody.focus();
+      document.execCommand('insertHTML', false, html);
+      refreshWordCount();
+    });
+
+    const imageFileInput = document.getElementById('imageFileInput');
+    document.getElementById('insertImageBtn').addEventListener('click', () => imageFileInput.click());
+    imageFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      toast('Uploading image…');
+      try {
+        const result = await Media.upload(account.token, target.owner, target.repo, target.branch, file);
+        editorBody.focus();
+        document.execCommand('insertHTML', false, `<img src="${result.url}" alt="${escapeHtml(file.name)}" />`);
+        toast('Image uploaded and inserted');
+        refreshWordCount();
+      } catch (err) {
+        toast(err.message || 'Could not upload that image.', 'error');
+      } finally {
+        e.target.value = '';
+      }
+    });
+
+    // ---------- Save ----------
+    function setSyncState(state, message) {
+      const rule = document.getElementById('droneRule');
+      const label = document.getElementById('syncLabel');
+      rule.classList.toggle('is-active', state === 'saving');
+      label.classList.toggle('error', state === 'error');
+      label.textContent = message || (
+        state === 'saving' ? 'Committing to GitHub…' :
+        state === 'saved' ? 'Saved to GitHub' :
+        state === 'error' ? 'Could not save' : ''
+      );
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      if (!frontmatter.title.trim()) {
+        toast('Give the article a title before saving.', 'error');
+        return;
+      }
+      if (!frontmatter.slug.trim()) {
+        toast('Give the article a slug before saving.', 'error');
+        return;
+      }
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      setSyncState('saving');
+      try {
+        const result = await Articles.save(account.token, target.owner, target.repo, target.branch, {
+          existingPath: currentPath,
+          existingSha: currentSha,
+          frontmatter,
+          body: editorBody.innerHTML,
+        });
+        currentPath = result.path;
+        currentSha = result.sha;
+        setSyncState('saved');
+        toast('Article committed to GitHub');
+        // Reflect new path in the URL without reloading the editor.
+        history.replaceState(null, '', `editor.html?path=${encodeURIComponent(currentPath)}`);
+        setTimeout(() => setSyncState('idle'), 2500);
+      } catch (err) {
+        setSyncState('error', err.message || 'Could not save this article to GitHub.');
+        toast(err.message || 'Could not save this article.', 'error');
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+
+    refreshWordCount();
+  }
+</script>
+</body>
+</html>

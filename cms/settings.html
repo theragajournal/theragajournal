@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Settings · The Raga Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/css/tokens.css" />
+<link rel="stylesheet" href="../assets/css/shell.css" />
+<style>
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .color-row { display: flex; gap: 8px; align-items: center; }
+  .color-row input[type=color] { width: 42px; height: 42px; border-radius: 8px; border: 1px solid var(--hairline); cursor: pointer; padding: 2px; }
+  .repo-info-card { border: 1px solid var(--hairline); border-radius: var(--radius); padding: 16px; }
+  .repo-info-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13.5px; }
+  .repo-info-row + .repo-info-row { border-top: 1px solid var(--hairline); padding-top: 12px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div id="app-shell"></div>
+
+<script src="../assets/js/github.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/markdown.js"></script>
+<script src="../assets/js/util.js"></script>
+<script src="../assets/js/shell.js"></script>
+<script>
+  const session = Shell.mount('settings');
+  if (session) {
+    const { account, target } = session;
+    const root = Shell.pageRoot();
+    const CONFIG_PATH = 'config/site.json';
+
+    const DEFAULT_CONFIG = {
+      siteTitle: 'The Raga Journal',
+      tagline: 'Notes on Indian classical music',
+      theme: { mode: 'light', accentColor: '#A8762E' },
+    };
+
+    root.innerHTML = `
+      <div class="page medium rise-in">
+        <h1 class="font-display" style="font-size:28px;margin-bottom:4px;">Settings</h1>
+        <p class="faint" style="font-size:13.5px;margin:0 0 28px;">Site configuration, stored at <code class="mono" style="background:var(--paper-dim);padding:1px 5px;border-radius:4px;">${CONFIG_PATH}</code></p>
+
+        <section style="margin-bottom:36px;">
+          <h2 class="font-display" style="font-size:17px;margin-bottom:16px;">Site identity</h2>
+          <div class="field" style="margin-bottom:16px;">
+            <label class="field-label">Site title</label>
+            <input id="siteTitleInput" class="input" />
+          </div>
+          <div class="field">
+            <label class="field-label">Tagline</label>
+            <input id="taglineInput" class="input" />
+          </div>
+        </section>
+
+        <section style="margin-bottom:36px;">
+          <h2 class="font-display" style="font-size:17px;margin-bottom:16px;">Theme</h2>
+          <div class="settings-grid">
+            <div class="field">
+              <label class="field-label">Mode</label>
+              <select id="modeSelect" class="input">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="auto">Auto (follows system)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Accent color</label>
+              <div class="color-row">
+                <input type="color" id="accentColorPicker" />
+                <input id="accentColorInput" class="input mono" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section style="margin-bottom:32px;">
+          <h2 class="font-display" style="font-size:17px;margin-bottom:16px;">Repository</h2>
+          <div class="repo-info-card">
+            <div class="repo-info-row"><span class="soft">Connected repository</span><span class="mono">${target.owner}/${target.repo}</span></div>
+            <div class="repo-info-row">
+              <span class="soft" style="display:flex;align-items:center;gap:6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v6M18 9a9 9 0 0 1-9 9"/></svg>
+                Branch
+              </span>
+              <select id="branchSelect" class="input" style="width:auto;padding:6px 12px;"></select>
+            </div>
+          </div>
+        </section>
+
+        <button id="saveBtn" class="btn btn-primary">Save settings to GitHub</button>
+      </div>
+    `;
+
+    let config = DEFAULT_CONFIG;
+    let sha = undefined;
+
+    function syncForm() {
+      document.getElementById('siteTitleInput').value = config.siteTitle || '';
+      document.getElementById('taglineInput').value = config.tagline || '';
+      document.getElementById('modeSelect').value = (config.theme && config.theme.mode) || 'light';
+      const color = (config.theme && config.theme.accentColor) || '#A8762E';
+      document.getElementById('accentColorPicker').value = color;
+      document.getElementById('accentColorInput').value = color;
+    }
+
+    document.getElementById('siteTitleInput').addEventListener('input', (e) => config.siteTitle = e.target.value);
+    document.getElementById('taglineInput').addEventListener('input', (e) => config.tagline = e.target.value);
+    document.getElementById('modeSelect').addEventListener('change', (e) => {
+      config.theme = { ...config.theme, mode: e.target.value };
+    });
+    document.getElementById('accentColorPicker').addEventListener('input', (e) => {
+      config.theme = { ...config.theme, accentColor: e.target.value };
+      document.getElementById('accentColorInput').value = e.target.value;
+    });
+    document.getElementById('accentColorInput').addEventListener('input', (e) => {
+      config.theme = { ...config.theme, accentColor: e.target.value };
+      document.getElementById('accentColorPicker').value = e.target.value;
+    });
+
+    document.getElementById('branchSelect').addEventListener('change', (e) => {
+      Auth.setTarget({ ...target, branch: e.target.value });
+      toast(`Switched to branch "${e.target.value}". Reloading…`);
+      setTimeout(() => location.reload(), 700);
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Saving…';
+      try {
+        const result = await window.GitHubAPI.putFile(
+          account.token, target.owner, target.repo, target.branch,
+          CONFIG_PATH, JSON.stringify(config, null, 2), 'Update site settings', sha
+        );
+        sha = result.content.sha;
+        toast('Settings saved to GitHub');
+      } catch (err) {
+        toast(err.message || 'Could not save settings.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save settings to GitHub';
+      }
+    });
+
+    (async () => {
+      try {
+        const file = await window.GitHubAPI.getFile(account.token, target.owner, target.repo, target.branch, CONFIG_PATH);
+        if (file) {
+          config = { ...DEFAULT_CONFIG, ...JSON.parse(file.content) };
+          sha = file.sha;
+        }
+      } catch { /* use defaults */ }
+      syncForm();
+
+      try {
+        const branches = await window.GitHubAPI.listBranches(account.token, target.owner, target.repo);
+        const select = document.getElementById('branchSelect');
+        select.innerHTML = '';
+        (branches.length ? branches : [target.branch]).forEach((b) => {
+          const opt = document.createElement('option');
+          opt.value = b;
+          opt.textContent = b;
+          if (b === target.branch) opt.selected = true;
+          select.appendChild(opt);
+        });
+      } catch { /* ignore */ }
+    })();
+  }
+</script>
+</body>
+</html>

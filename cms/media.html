@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Media Library · The Raga Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/css/tokens.css" />
+<link rel="stylesheet" href="../assets/css/shell.css" />
+<style>
+  .dropzone {
+    border: 2px dashed var(--hairline); border-radius: 12px; padding: 44px 20px;
+    text-align: center; cursor: pointer; margin-bottom: 32px; transition: border-color 0.15s, background-color 0.15s;
+  }
+  .dropzone:hover, .dropzone.drag-over { border-color: var(--brass-300); background: var(--brass-50); }
+  .dropzone svg { color: var(--ink-faint); margin-bottom: 8px; }
+  .media-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  @media (max-width: 1000px) { .media-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 640px) { .media-grid { grid-template-columns: repeat(2, 1fr); } }
+  .media-card { border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; background: #fff; }
+  .media-thumb { aspect-ratio: 1; background: var(--paper-dim); display: flex; align-items: center; justify-content: center; color: var(--ink-faint); position: relative; overflow: hidden; }
+  .media-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .media-overlay {
+    position: absolute; inset: 0; background: rgba(28,27,25,0.7); opacity: 0;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity 0.15s;
+  }
+  .media-card:hover .media-overlay { opacity: 1; }
+  .media-overlay button { background: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink); }
+  .media-overlay button.danger { color: var(--rust); }
+  .media-info { padding: 8px 10px; }
+  .media-info .fname { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .media-info .fsize { font-size: 11px; color: var(--ink-faint); }
+</style>
+</head>
+<body>
+<div id="app-shell"></div>
+
+<script src="../assets/js/github.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/markdown.js"></script>
+<script src="../assets/js/util.js"></script>
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/media.js"></script>
+<script>
+  const session = Shell.mount('media');
+  if (session) {
+    const { account, target } = session;
+    const root = Shell.pageRoot();
+
+    root.innerHTML = `
+      <div class="page rise-in">
+        <h1 class="font-display" style="font-size:28px;margin-bottom:4px;">Media Library</h1>
+        <p class="faint" style="font-size:13.5px;margin:0 0 24px;">
+          Files upload directly into <code class="mono" style="background:var(--paper-dim);padding:1px 5px;border-radius:4px;">media/</code> in your repository.
+        </p>
+
+        <div class="dropzone" id="dropzone">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 20h14"/></svg>
+          <p class="soft" style="font-size:13.5px; margin:0;" id="dropzoneLabel">Drag files here, or click to browse — images, video, audio, PDFs, documents</p>
+        </div>
+        <input type="file" id="fileInput" multiple style="display:none;" />
+
+        <div id="errorBox" class="alert alert-error" style="display:none;"></div>
+        <div id="mediaGrid"><div class="center-loading"><span class="spinner"></span> Loading media...</div></div>
+      </div>
+    `;
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const mediaGrid = document.getElementById('mediaGrid');
+    let items = [];
+
+    function typeIconSvg(type) {
+      const icons = {
+        video: '<path d="m9 8 6 4-6 4V8Z"/><rect x="3" y="4" width="18" height="16" rx="2"/>',
+        audio: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+        pdf: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+        document: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+        other: '<rect x="3" y="3" width="18" height="18" rx="2"/>',
+      };
+      return `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">${icons[type] || icons.other}</svg>`;
+    }
+
+    function render() {
+      if (items.length === 0) {
+        mediaGrid.innerHTML = `<p class="faint" style="text-align:center;font-size:13.5px;padding:48px 0;">Nothing uploaded yet. Drop a file above to get started.</p>`;
+        return;
+      }
+      mediaGrid.innerHTML = `<div class="media-grid">${items.map((item) => `
+        <div class="media-card" data-path="${escapeHtml(item.path)}">
+          <div class="media-thumb">
+            ${item.type === 'image'
+              ? `<img src="${item.url}" alt="${escapeHtml(item.name)}" />`
+              : typeIconSvg(item.type)}
+            <div class="media-overlay">
+              <button class="copy-btn" data-url="${escapeHtml(item.url)}" title="Copy URL">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+              <button class="danger del-btn" data-path="${escapeHtml(item.path)}" title="Delete">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="media-info">
+            <div class="fname">${escapeHtml(item.name)}</div>
+            <div class="fsize">${(item.size/1024).toFixed(0)} KB</div>
+          </div>
+        </div>
+      `).join('')}</div>`;
+
+      mediaGrid.querySelectorAll('.copy-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          navigator.clipboard.writeText(btn.dataset.url);
+          toast('URL copied to clipboard');
+        });
+      });
+      mediaGrid.querySelectorAll('.del-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const item = items.find((i) => i.path === btn.dataset.path);
+          if (!item) return;
+          if (!confirm(`Delete "${item.name}"? This commits a deletion to GitHub.`)) return;
+          try {
+            await Media.remove(account.token, target.owner, target.repo, target.branch, item);
+            items = items.filter((i) => i.path !== item.path);
+            toast('Media deleted');
+            render();
+          } catch (err) {
+            toast(err.message || 'Could not delete this file.', 'error');
+          }
+        });
+      });
+    }
+
+    async function reload() {
+      try {
+        items = await Media.list(account.token, target.owner, target.repo, target.branch);
+        render();
+      } catch (err) {
+        document.getElementById('errorBox').textContent = err.message || 'Could not load the media library.';
+        document.getElementById('errorBox').style.display = 'block';
+        mediaGrid.innerHTML = '';
+      }
+    }
+
+    async function handleFiles(fileList) {
+      const label = document.getElementById('dropzoneLabel');
+      for (const file of Array.from(fileList)) {
+        label.innerHTML = `<span class="spinner"></span> Uploading ${escapeHtml(file.name)}…`;
+        try {
+          await Media.upload(account.token, target.owner, target.repo, target.branch, file);
+        } catch (err) {
+          toast(`Could not upload ${file.name}: ${err.message || 'unknown error'}`, 'error');
+        }
+      }
+      label.textContent = 'Drag files here, or click to browse — images, video, audio, PDFs, documents';
+      toast('Upload complete');
+      reload();
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFiles(e.target.files); e.target.value = ''; });
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+    });
+
+    reload();
+  }
+</script>
+</body>
+</html>

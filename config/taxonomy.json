@@ -1,0 +1,8 @@
+{
+  "categories": [
+    { "id": "cat-announcements", "name": "Announcements", "slug": "announcements", "order": 0 }
+  ],
+  "tags": [
+    { "id": "tag-welcome", "name": "welcome", "slug": "welcome" }
+  ]
+}

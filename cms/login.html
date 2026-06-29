@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Raga Journal · CMS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231C1B19'/%3E%3Cpath d='M5 16 Q9 8, 13 16 T21 16 T27 16' stroke='%23A8762E' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/css/tokens.css" />
+<style>
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+  .login-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 64px 24px; }
+  .login-card { width: 100%; max-width: 400px; }
+  .masthead { text-align: center; margin-bottom: 40px; }
+  .masthead h1 { font-size: 34px; letter-spacing: -0.03em; }
+  .masthead p { margin: 8px 0 0; }
+  .saved-account {
+    display: flex; align-items: center; gap: 12px;
+    border: 1px solid var(--hairline); border-radius: 8px;
+    padding: 12px; margin-bottom: 8px; transition: border-color 0.15s;
+  }
+  .saved-account:hover { border-color: var(--brass-300); }
+  .saved-account button.pick { background: none; border: none; display: flex; gap: 12px; align-items: center; flex: 1; text-align: left; cursor: pointer; padding: 0; }
+  .saved-account img { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--hairline); }
+  .saved-account .remove { font-size: 11px; color: var(--ink-faint); background: none; border: none; cursor: pointer; }
+  .saved-account .remove:hover { color: var(--rust); }
+  .alert { border-radius: 8px; padding: 12px 14px; font-size: 13px; margin-bottom: 14px; }
+  .alert-error { background: var(--rust-dim); color: var(--rust); border: 1px solid rgba(168,67,46,0.2); }
+  .footnote { font-size: 12px; color: var(--ink-faint); line-height: 1.6; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--hairline); }
+  .footnote a { color: var(--brass-600); font-weight: 500; text-decoration: none; }
+  .footnote code { background: var(--paper-dim); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
+  .page-footer { text-align: center; padding-bottom: 28px; font-size: 12px; color: var(--ink-faint); }
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-card rise-in">
+    <div class="masthead">
+      <div class="logo-mark" style="margin: 0 auto 20px;">
+        <svg viewBox="0 0 32 32" width="20" height="20">
+          <path d="M5 16 Q9 8, 13 16 T21 16 T27 16" stroke="#A8762E" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="font-display">The Raga Journal</h1>
+      <p class="eyebrow">Editorial CMS · Powered by GitHub</p>
+    </div>
+
+    <div class="drone-rule" style="margin-bottom: 36px;"></div>
+
+    <div id="savedAccounts" style="display:none; margin-bottom: 28px;">
+      <p class="eyebrow" style="margin-bottom: 10px;">Signed in before</p>
+      <div id="accountsList"></div>
+      <button id="useOtherBtn" class="btn btn-ghost btn-sm" style="margin-top: 8px; color: var(--brass-600); border: none; padding-left:0;">+ Use a different account</button>
+    </div>
+
+    <form id="loginForm">
+      <label class="field-label">Personal Access Token</label>
+      <input id="tokenInput" type="password" class="input mono" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" style="margin-bottom: 14px;" />
+      <div id="loginError" class="alert alert-error" style="display:none;"></div>
+      <button type="submit" id="loginBtn" class="btn btn-primary btn-block">
+        <span id="loginBtnText">Continue</span>
+      </button>
+      <button type="button" id="backToSavedBtn" class="btn btn-ghost btn-block" style="display:none; margin-top:8px;">← Back to saved accounts</button>
+    </form>
+
+    <div class="footnote">
+      Create a token at <a href="https://github.com/settings/tokens/new?scopes=repo&description=Raga%20Journal%20CMS" target="_blank" rel="noreferrer">github.com/settings/tokens</a>
+      with <code>repo</code> scope. Your token is stored only in this browser's local storage —
+      it's sent only to GitHub's API, never anywhere else.
+    </div>
+  </div>
+</div>
+
+<footer class="page-footer">No database. No server. Your repository is the source of truth.</footer>
+
+<script src="../assets/js/github.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script>
+  const accounts = Auth.getAccounts();
+  const savedBox = document.getElementById('savedAccounts');
+  const accountsList = document.getElementById('accountsList');
+  const loginForm = document.getElementById('loginForm');
+  const backToSavedBtn = document.getElementById('backToSavedBtn');
+
+  function renderAccounts() {
+    accountsList.innerHTML = '';
+    accounts.forEach((acc) => {
+      const row = document.createElement('div');
+      row.className = 'saved-account';
+      row.innerHTML = `
+        <button class="pick">
+          <img src="${acc.avatarUrl}" alt="" />
+          <span>
+            <div style="font-size:13px;font-weight:500;color:var(--ink)">${acc.name || acc.login}</div>
+            <div style="font-size:11px;color:var(--ink-faint)">@${acc.login}</div>
+          </span>
+        </button>
+        <button class="remove">Remove</button>
+      `;
+      row.querySelector('.pick').addEventListener('click', () => {
+        Auth.switchAccount(acc.login);
+        location.href = 'select-repo.html';
+      });
+      row.querySelector('.remove').addEventListener('click', () => {
+        Auth.removeAccount(acc.login);
+        location.reload();
+      });
+      accountsList.appendChild(row);
+    });
+  }
+
+  if (accounts.length > 0) {
+    savedBox.style.display = 'block';
+    loginForm.style.display = 'none';
+    renderAccounts();
+  }
+
+  document.getElementById('useOtherBtn').addEventListener('click', () => {
+    savedBox.style.display = 'none';
+    loginForm.style.display = 'block';
+    if (accounts.length > 0) backToSavedBtn.style.display = 'block';
+  });
+
+  backToSavedBtn.addEventListener('click', () => {
+    savedBox.style.display = 'block';
+    loginForm.style.display = 'none';
+  });
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = document.getElementById('tokenInput').value.trim();
+    if (!token) return;
+    const errBox = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('loginBtnText');
+    errBox.style.display = 'none';
+    btn.disabled = true;
+    btnText.innerHTML = '<span class="spinner"></span>';
+    try {
+      await Auth.addAccount(token);
+      location.href = 'select-repo.html';
+    } catch (err) {
+      errBox.textContent = err.status === 401
+        ? 'That token was rejected by GitHub. Check that it is current and has not expired.'
+        : (err.message || 'Could not validate that token. Check your connection and try again.');
+      errBox.style.display = 'block';
+      btn.disabled = false;
+      btnText.textContent = 'Continue';
+    }
+  });
+
+  // If already fully logged in, skip straight to the dashboard.
+  if (Auth.getActiveAccount() && Auth.getTarget()) {
+    location.href = 'dashboard.html';
+  }
+</script>
+</body>
+</html>
