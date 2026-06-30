@@ -29,6 +29,11 @@
       "id": "72f3e507-54bb-4041-b013-ac2a0d914cf4",
       "name": "Tabla",
       "slug": "tabla"
+    },
+    {
+      "id": "9d6595f2-c63a-4f13-bc2c-883d2e8156bb",
+      "name": "Interviews",
+      "slug": "interviews"
     }
   ]
 }
