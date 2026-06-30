@@ -47,8 +47,6 @@
 
 <main class="front-page" id="top">
   <div id="loadingState" class="loading-state">Loading the latest issue…</div>
-  <div id="rawConfigCheck" style="background:#D1E7DD; border:2px solid #0F5132; color:#0F5132; padding:14px 18px; border-radius:6px; font-family:monospace; font-size:13px; margin-bottom:16px; font-weight:bold;"></div>
-  <div id="debugBox" style="display:none; background:#FFF3CD; border:1px solid #E0C36C; color:#5A4A1B; padding:14px 18px; border-radius:6px; font-family:monospace; font-size:12.5px; white-space:pre-wrap; margin-bottom:20px;"></div>
   <div id="frontContent" style="display:none;"></div>
 </main>
 
@@ -97,7 +95,7 @@
   </div>
 </footer>
 
-<script src="assets/js/site-config.js?v=2"></script>
+<script src="assets/js/site-config.js"></script>
 <script src="assets/js/markdown.js"></script>
 <script src="assets/js/public-content.js"></script>
 <script>
@@ -106,9 +104,6 @@
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
   document.getElementById('githubLink').href = `https://github.com/${window.SITE_REPO.owner}/${window.SITE_REPO.repo}`;
-
-  document.getElementById('rawConfigCheck').textContent =
-    'LIVE CONFIG CHECK — owner is exactly: [' + window.SITE_REPO.owner + ']  repo is exactly: [' + window.SITE_REPO.repo + ']  branch is exactly: [' + window.SITE_REPO.branch + ']';
 
   const HOUSE_ARTICLES = [
     {
@@ -124,6 +119,20 @@
       preview: 'The opening set wavered. By the second half, the room had forgotten.',
     },
   ];
+
+  const DEFAULT_HOMEPAGE_CONFIG = {
+    showHero: true,
+    showSidebarRail: true,
+    showQuoteBox: true,
+    showPhotoCards: true,
+    showNewsletter: true,
+    showCategoryRails: true,
+  };
+  const FONT_FAMILIES = {
+    fraunces: "'Source Serif 4', serif",
+    playfair: "Georgia, serif",
+    inter: "'Inter', sans-serif",
+  };
 
   function fmtDate(iso) {
     if (!iso) return '';
@@ -143,7 +152,27 @@
     return div.innerHTML;
   }
 
-  function renderFrontPage(articles) {
+  function applySiteConfig(config) {
+    if (config.theme && config.theme.accentColor) {
+      document.documentElement.style.setProperty('--brass', config.theme.accentColor);
+      document.documentElement.style.setProperty('--brass-deep', config.theme.accentColor);
+    }
+    if (config.theme && FONT_FAMILIES[config.theme.fontDisplay]) {
+      document.documentElement.style.setProperty('--display-font-override', FONT_FAMILIES[config.theme.fontDisplay]);
+      document.querySelectorAll('.wordmark, .lead-story h1, .headline-list h3, .section-head h2, .photo-card h4')
+        .forEach(el => { el.style.fontFamily = FONT_FAMILIES[config.theme.fontDisplay]; });
+    }
+    if (config.siteTitle) {
+      document.title = config.siteTitle;
+    }
+    if (config.tagline) {
+      const tagEl = document.querySelector('.tagline');
+      if (tagEl) tagEl.textContent = config.tagline;
+    }
+  }
+
+  function renderFrontPage(articles, homepageConfig) {
+    const sections = { ...DEFAULT_HOMEPAGE_CONFIG, ...(homepageConfig || {}) };
     const usingHouse = articles.length === 0;
     const items = usingHouse ? HOUSE_ARTICLES : articles.map(a => ({
       frontmatter: a.frontmatter,
@@ -158,12 +187,14 @@
     root.innerHTML = `
       ${usingHouse ? `<p class="empty-state" style="padding-bottom:8px;">No articles published yet — showing sample front page content. Publish your first article from the <a href="cms/login.html" style="color:var(--brass-deep);font-weight:600;">CMS</a> and it will appear here automatically.</p>` : ''}
       <div class="front-grid">
-        <div class="lead-story">
-          <span class="kicker">${escapeHtml((lead.frontmatter.categories || [])[0] || 'Front Page')}</span>
-          <a href="${articleHref(lead)}"><h1>${escapeHtml(lead.frontmatter.title)}</h1></a>
-          <p class="dek">${escapeHtml(lead.frontmatter.excerpt || lead.preview)}</p>
-          <p class="byline sans">By ${escapeHtml(lead.frontmatter.authorId || 'The Editors')} · ${fmtDate(lead.frontmatter.publishedAt)}</p>
-        </div>
+        ${sections.showHero ? `
+          <div class="lead-story">
+            <span class="kicker">${escapeHtml((lead.frontmatter.categories || [])[0] || 'Front Page')}</span>
+            <a href="${articleHref(lead)}"><h1>${escapeHtml(lead.frontmatter.title)}</h1></a>
+            <p class="dek">${escapeHtml(lead.frontmatter.excerpt || lead.preview)}</p>
+            <p class="byline sans">By ${escapeHtml(lead.frontmatter.authorId || 'The Editors')} · ${fmtDate(lead.frontmatter.publishedAt)}</p>
+          </div>
+        ` : '<div></div>'}
 
         <div class="secondary-stories">
           <ul class="headline-list">
@@ -180,21 +211,25 @@
         </div>
 
         <aside>
-          <div class="rail-box">
-            <div class="rail-title sans">Inside This Issue</div>
-            <ul class="rail-list">
-              ${items.slice(0, 6).map(a => `<li><a href="${articleHref(a)}">${escapeHtml(a.frontmatter.title)}</a></li>`).join('')}
-            </ul>
-          </div>
-          <div class="quote-box">
-            <span class="quote-kicker">Quote of the Day</span>
-            <p>"A raga is not performed. It is allowed to arrive."</p>
-            <span class="attribution">— attributed to a Hindustani vocal tradition</span>
-          </div>
+          ${sections.showSidebarRail ? `
+            <div class="rail-box">
+              <div class="rail-title sans">Inside This Issue</div>
+              <ul class="rail-list">
+                ${items.slice(0, 6).map(a => `<li><a href="${articleHref(a)}">${escapeHtml(a.frontmatter.title)}</a></li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+          ${sections.showQuoteBox ? `
+            <div class="quote-box">
+              <span class="quote-kicker">Quote of the Day</span>
+              <p>"A raga is not performed. It is allowed to arrive."</p>
+              <span class="attribution">— attributed to a Hindustani vocal tradition</span>
+            </div>
+          ` : ''}
         </aside>
       </div>
 
-      ${rest.length > 0 ? `
+      ${sections.showPhotoCards && rest.length > 0 ? `
         <div class="section-head anchor-target" id="reviews">
           <h2>More From the Journal</h2>
           <a href="#archive" class="view-all sans">View archive →</a>
@@ -209,51 +244,52 @@
         </div>
       ` : ''}
 
-      <div class="section-head anchor-target" id="archive">
-        <h2>Browse by Section</h2>
-      </div>
-      <div class="text-rail">
-        ${['Reviews','Interviews','Tabla & Percussion','Essays'].map(section => {
-          const inSection = items.filter(a => (a.frontmatter.categories || []).includes(section));
-          return `
-            <div class="text-rail-col anchor-target" id="${section.toLowerCase().replace(/[^a-z]+/g,'-')}">
-              <div class="rail-col-title sans">${escapeHtml(section)}</div>
-              <ul>
-                ${inSection.length > 0
-                  ? inSection.slice(0,5).map(a => `<li><a href="${articleHref(a)}">${escapeHtml(a.frontmatter.title)}</a></li>`).join('')
-                  : `<li style="color:var(--ink-faint);">Nothing published yet</li>`}
-              </ul>
-            </div>
-          `;
-        }).join('')}
-      </div>
+      ${sections.showCategoryRails ? `
+        <div class="section-head anchor-target" id="archive">
+          <h2>Browse by Section</h2>
+        </div>
+        <div class="text-rail">
+          ${['Reviews','Interviews','Tabla & Percussion','Essays'].map(section => {
+            const inSection = items.filter(a => (a.frontmatter.categories || []).includes(section));
+            return `
+              <div class="text-rail-col anchor-target" id="${section.toLowerCase().replace(/[^a-z]+/g,'-')}">
+                <div class="rail-col-title sans">${escapeHtml(section)}</div>
+                <ul>
+                  ${inSection.length > 0
+                    ? inSection.slice(0,5).map(a => `<li><a href="${articleHref(a)}">${escapeHtml(a.frontmatter.title)}</a></li>`).join('')
+                    : `<li style="color:var(--ink-faint);">Nothing published yet</li>`}
+                </ul>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : ''}
     `;
 
     document.getElementById('loadingState').style.display = 'none';
     root.style.display = 'block';
+
+    if (!sections.showNewsletter) {
+      const strip = document.getElementById('newsletter');
+      if (strip) strip.style.display = 'none';
+    }
   }
 
-  PublicContent.listPublished()
-    .then((articles) => {
-      const box = document.getElementById('debugBox');
-      if (articles.length === 0) {
-        box.style.display = 'block';
-        box.textContent = 'DEBUG — fetch succeeded but found 0 published articles.\n'
-          + 'Repo config: ' + JSON.stringify(window.SITE_REPO)
-          + '\n\nCheck: does articles/*.md have status: published exactly, '
-          + 'and is the repo public?';
-      } else {
-        box.style.display = 'none';
-      }
-      renderFrontPage(articles);
-    })
-    .catch((err) => {
-      console.error(err);
-      const box = document.getElementById('debugBox');
-      box.style.display = 'block';
-      box.textContent = 'DEBUG — could not load articles:\n' + (err && err.message ? err.message : String(err))
-        + '\n\nRepo config: ' + JSON.stringify(window.SITE_REPO);
-      renderFrontPage([]);
+  async function loadSiteConfig() {
+    try {
+      const { owner, repo, branch } = window.SITE_REPO;
+      const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/config/site.json`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
+  Promise.all([PublicContent.listPublished().catch(() => []), loadSiteConfig()])
+    .then(([articles, siteConfig]) => {
+      if (siteConfig) applySiteConfig(siteConfig);
+      renderFrontPage(articles, siteConfig ? siteConfig.homepage : null);
     });
 </script>
 </body>
