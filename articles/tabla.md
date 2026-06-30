@@ -1,5 +1,5 @@
 ---
-title: Tabla
+title: /gshhd/
 slug: tabla
 status: published
 excerpt: ''
@@ -9,7 +9,7 @@ categories: []
 tags: []
 publishedAt: ''
 scheduledFor: ''
-updatedAt: '2026-06-30T09:57:09.988Z'
+updatedAt: '2026-06-30T09:59:37.919Z'
 featured: false
 pinned: false
 passwordProtected: false
