@@ -9,7 +9,7 @@ categories: []
 tags: []
 publishedAt: ''
 scheduledFor: ''
-updatedAt: '2026-06-30T15:04:28.479Z'
+updatedAt: '2026-06-30T15:04:32.775Z'
 featured: false
 pinned: false
 passwordProtected: false
