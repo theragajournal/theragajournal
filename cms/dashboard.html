@@ -31,6 +31,9 @@
   .empty-row { padding: 32px 16px; text-align: center; font-size: 13.5px; color: var(--ink-faint); }
   .repo-status-card { display: flex; align-items: center; gap: 14px; border: 1px solid var(--hairline); border-radius: var(--radius); padding: 16px; margin-bottom: 18px; }
   .repo-status-card .icon-circle { width: 38px; height: 38px; border-radius: 50%; background: var(--brass-50); display: flex; align-items: center; justify-content: center; color: var(--brass-600); flex-shrink: 0; }
+  .quick-draft-box { border: 1px solid var(--hairline); border-radius: var(--radius); padding: 18px; margin-bottom: 28px; }
+  .quick-draft-box h3 { font-size: 14.5px; margin-bottom: 12px; }
+  .quick-draft-box input, .quick-draft-box textarea { margin-bottom: 10px; }
 </style>
 </head>
 <body>
@@ -55,7 +58,15 @@
             <span id="repoLinkText"></span> ↗
           </a>
         </div>
-        <p class="faint" style="font-size:13.5px;margin:0 0 28px;">${target.branch} branch · everything here reflects the live repository</p>
+        <p class="faint" style="font-size:13.5px;margin:0 0 24px;">${target.branch} branch · everything here reflects the live repository</p>
+
+        <div class="quick-draft-box">
+          <h3 class="font-display">Quick Draft</h3>
+          <input id="quickTitle" class="input" placeholder="Title" />
+          <textarea id="quickBody" class="input" rows="3" style="resize:none;" placeholder="Jot down an idea..."></textarea>
+          <button id="quickSaveBtn" class="btn btn-primary btn-sm">Save draft</button>
+          <span id="quickDraftStatus" style="font-size:12px;color:var(--ink-faint);margin-left:10px;"></span>
+        </div>
 
         <div class="stat-grid" id="statGrid">
           ${['Total articles','Published','Drafts','Scheduled','Categories','Tags'].map(l => `
@@ -85,7 +96,10 @@
                 <div style="font-size:11.5px;color:var(--ink-faint);">Repository size</div>
               </div>
             </div>
-            <p class="eyebrow" style="margin: 24px 0 8px;">Latest commits</p>
+            <p class="eyebrow" style="margin: 24px 0 8px; display:flex; justify-content:space-between; align-items:center;">
+              Latest commits
+              <a href="activity.html" style="font-weight:500; color:var(--brass-600); text-transform:none; letter-spacing:0; font-size:12px;">View activity log →</a>
+            </p>
             <div class="panel divide" id="commitList">
               <div class="center-loading"><span class="spinner"></span> Loading...</div>
             </div>
@@ -93,6 +107,38 @@
         </div>
       </div>
     `;
+
+    document.getElementById('quickSaveBtn').addEventListener('click', async () => {
+      const title = document.getElementById('quickTitle').value.trim();
+      const body = document.getElementById('quickBody').value.trim();
+      const status = document.getElementById('quickDraftStatus');
+      if (!title) { status.textContent = 'Add a title first.'; return; }
+      const btn = document.getElementById('quickSaveBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+      try {
+        const frontmatter = window.MD.DEFAULT_FRONTMATTER();
+        frontmatter.title = title;
+        frontmatter.slug = window.MD.slugify(title) + '-' + Date.now().toString().slice(-5);
+        frontmatter.status = 'draft';
+        await Articles.save(account.token, target.owner, target.repo, target.branch, {
+          existingPath: null,
+          existingSha: null,
+          frontmatter,
+          body: body ? `<p>${escapeHtml(body)}</p>` : '',
+          commitMessage: `Quick draft: ${title}`,
+        });
+        status.textContent = 'Saved to Drafts.';
+        document.getElementById('quickTitle').value = '';
+        document.getElementById('quickBody').value = '';
+        toast('Draft saved');
+      } catch (err) {
+        status.textContent = err.message || 'Could not save draft.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save draft';
+      }
+    });
 
     (async () => {
       try {

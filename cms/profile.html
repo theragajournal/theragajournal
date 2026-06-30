@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Profile · The Raga Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/css/tokens.css" />
+<link rel="stylesheet" href="../assets/css/shell.css" />
+<style>
+  .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+  .profile-header img { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--hairline); }
+  .social-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .social-row select { width: 130px; flex-shrink: 0; }
+  .social-row .remove-link { background: none; border: none; color: var(--ink-faint); cursor: pointer; padding: 0 8px; }
+  .social-row .remove-link:hover { color: var(--rust); }
+</style>
+</head>
+<body>
+<div id="app-shell"></div>
+
+<script src="../assets/js/github.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/markdown.js"></script>
+<script src="../assets/js/util.js"></script>
+<script src="../assets/js/shell.js"></script>
+<script>
+  const session = Shell.mount('profile');
+  if (session) {
+    const { account, target } = session;
+    const root = Shell.pageRoot();
+    const PROFILE_PATH = `authors/${account.login}.json`;
+
+    const DEFAULT_PROFILE = {
+      id: account.login,
+      name: account.name || account.login,
+      avatarUrl: account.avatarUrl,
+      bio: '',
+      role: 'admin',
+      socialLinks: [],
+    };
+
+    root.innerHTML = `
+      <div class="page narrow rise-in">
+        <h1 class="font-display" style="font-size:26px;margin-bottom:4px;">Profile</h1>
+        <p class="faint" style="font-size:13.5px;margin:0 0 24px;">
+          Stored at <code class="mono" style="background:var(--paper-dim);padding:1px 5px;border-radius:4px;">${PROFILE_PATH}</code> — this is the byline readers see on your articles.
+        </p>
+
+        <div class="profile-header">
+          <img id="profileAvatar" src="${account.avatarUrl}" alt="" />
+          <div>
+            <p style="font-size:13px;color:var(--ink-faint);margin:0;">Avatar comes from your GitHub account</p>
+            <p style="font-size:12px;color:var(--ink-faint);margin:2px 0 0;">@${account.login}</p>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:16px;">
+          <label class="field-label">Display name</label>
+          <input id="nameInput" class="input" />
+        </div>
+
+        <div class="field" style="margin-bottom:16px;">
+          <label class="field-label">Bio</label>
+          <textarea id="bioInput" class="input" rows="4" style="resize:none;" placeholder="A short bio shown alongside your articles"></textarea>
+        </div>
+
+        <div class="field" style="margin-bottom:8px;">
+          <label class="field-label">Role</label>
+          <select id="roleSelect" class="input">
+            <option value="admin">Admin</option>
+            <option value="editor">Editor</option>
+            <option value="contributor">Contributor</option>
+          </select>
+        </div>
+
+        <div class="field" style="margin: 20px 0 8px;">
+          <label class="field-label">Social links</label>
+          <div id="socialLinksList"></div>
+          <button id="addSocialBtn" class="btn btn-ghost btn-sm" style="margin-top:6px;">+ Add link</button>
+        </div>
+
+        <button id="saveProfileBtn" class="btn btn-primary" style="margin-top:20px;">Save profile</button>
+      </div>
+    `;
+
+    let profile = DEFAULT_PROFILE;
+    let sha;
+
+    function renderSocialLinks() {
+      const list = document.getElementById('socialLinksList');
+      if (profile.socialLinks.length === 0) {
+        list.innerHTML = `<p style="font-size:13px;color:var(--ink-faint);">No social links yet.</p>`;
+        return;
+      }
+      list.innerHTML = profile.socialLinks.map((link, i) => `
+        <div class="social-row">
+          <select class="input" data-platform-idx="${i}">
+            ${['Twitter/X','Instagram','Website','GitHub','YouTube'].map(p =>
+              `<option value="${p}" ${link.platform === p ? 'selected' : ''}>${p}</option>`
+            ).join('')}
+          </select>
+          <input class="input" data-url-idx="${i}" value="${escapeHtml(link.url)}" placeholder="https://..." />
+          <button class="remove-link" data-remove-idx="${i}">✕</button>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('[data-platform-idx]').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          profile.socialLinks[+e.target.dataset.platformIdx].platform = e.target.value;
+        });
+      });
+      list.querySelectorAll('[data-url-idx]').forEach(inp => {
+        inp.addEventListener('input', (e) => {
+          profile.socialLinks[+e.target.dataset.urlIdx].url = e.target.value;
+        });
+      });
+      list.querySelectorAll('[data-remove-idx]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          profile.socialLinks.splice(+e.target.dataset.removeIdx, 1);
+          renderSocialLinks();
+        });
+      });
+    }
+
+    function syncForm() {
+      document.getElementById('nameInput').value = profile.name || '';
+      document.getElementById('bioInput').value = profile.bio || '';
+      document.getElementById('roleSelect').value = profile.role || 'admin';
+      renderSocialLinks();
+    }
+
+    document.getElementById('nameInput').addEventListener('input', (e) => profile.name = e.target.value);
+    document.getElementById('bioInput').addEventListener('input', (e) => profile.bio = e.target.value);
+    document.getElementById('roleSelect').addEventListener('change', (e) => profile.role = e.target.value);
+    document.getElementById('addSocialBtn').addEventListener('click', () => {
+      profile.socialLinks.push({ platform: 'Website', url: '' });
+      renderSocialLinks();
+    });
+
+    document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('saveProfileBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Saving...';
+      try {
+        const result = await window.GitHubAPI.putFile(
+          account.token, target.owner, target.repo, target.branch,
+          PROFILE_PATH, JSON.stringify(profile, null, 2), 'Update author profile', sha
+        );
+        sha = result.content.sha;
+        toast('Profile saved to GitHub');
+      } catch (err) {
+        toast(err.message || 'Could not save profile.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save profile';
+      }
+    });
+
+    (async () => {
+      try {
+        const file = await window.GitHubAPI.getFile(account.token, target.owner, target.repo, target.branch, PROFILE_PATH);
+        if (file) {
+          profile = { ...DEFAULT_PROFILE, ...JSON.parse(file.content) };
+          sha = file.sha;
+        }
+      } catch { /* use defaults */ }
+      syncForm();
+    })();
+  }
+</script>
+</body>
+</html>

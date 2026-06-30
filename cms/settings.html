@@ -57,23 +57,18 @@
 
         <section style="margin-bottom:36px;">
           <h2 class="font-display" style="font-size:17px;margin-bottom:16px;">Theme</h2>
-          <div class="settings-grid">
-            <div class="field">
-              <label class="field-label">Mode</label>
-              <select id="modeSelect" class="input">
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="auto">Auto (follows system)</option>
-              </select>
-            </div>
-            <div class="field">
-              <label class="field-label">Accent color</label>
-              <div class="color-row">
-                <input type="color" id="accentColorPicker" />
-                <input id="accentColorInput" class="input mono" />
-              </div>
-            </div>
+          <div class="field" style="max-width:280px;">
+            <label class="field-label">Mode</label>
+            <select id="modeSelect" class="input">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="auto">Auto (follows system)</option>
+            </select>
           </div>
+          <p style="font-size:12.5px;color:var(--ink-faint);margin-top:10px;">
+            Looking for accent color, fonts, or homepage layout? Those moved to
+            <a href="customizer.html" style="color:var(--brass-600);font-weight:500;">Customize Site</a>.
+          </p>
         </section>
 
         <section style="margin-bottom:32px;">
@@ -101,23 +96,12 @@
       document.getElementById('siteTitleInput').value = config.siteTitle || '';
       document.getElementById('taglineInput').value = config.tagline || '';
       document.getElementById('modeSelect').value = (config.theme && config.theme.mode) || 'light';
-      const color = (config.theme && config.theme.accentColor) || '#A8762E';
-      document.getElementById('accentColorPicker').value = color;
-      document.getElementById('accentColorInput').value = color;
     }
 
     document.getElementById('siteTitleInput').addEventListener('input', (e) => config.siteTitle = e.target.value);
     document.getElementById('taglineInput').addEventListener('input', (e) => config.tagline = e.target.value);
     document.getElementById('modeSelect').addEventListener('change', (e) => {
       config.theme = { ...config.theme, mode: e.target.value };
-    });
-    document.getElementById('accentColorPicker').addEventListener('input', (e) => {
-      config.theme = { ...config.theme, accentColor: e.target.value };
-      document.getElementById('accentColorInput').value = e.target.value;
-    });
-    document.getElementById('accentColorInput').addEventListener('input', (e) => {
-      config.theme = { ...config.theme, accentColor: e.target.value };
-      document.getElementById('accentColorPicker').value = e.target.value;
     });
 
     document.getElementById('branchSelect').addEventListener('change', (e) => {

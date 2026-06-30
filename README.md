@@ -13,6 +13,41 @@ Both read and write the same `articles/` folder in your repo. Publish an
 article from the CMS, and it appears on the public front page
 automatically — no rebuild, no redeploy, no second step.
 
+## The CMS, rebuilt
+
+The dashboard at `/cms/` is fully responsive — a real sidebar on desktop,
+a slide-out drawer plus a bottom tab bar on phones — and includes:
+
+- **Dashboard** — Quick Draft widget, live stats, recent activity, repo
+  health, latest commits
+- **Articles** — bulk select + bulk status change + bulk delete, inline
+  quick-edit, sortable list, search and status filters
+- **Editor** — focus mode, keyboard shortcuts (`Ctrl/Cmd+S` to commit,
+  `Ctrl/Cmd+Shift+F` for focus mode), duplicate article, and real
+  **revision history** pulled straight from git commits for that file,
+  with one-click restore of an older version into the editor
+- **Media Library** — grid/list view toggle, type filters, search, bulk
+  delete
+- **Activity Log** — every commit to the repo, grouped by day, filterable
+  by content type — this is git history, not a separate database
+- **Tools** — export all content to a single JSON file, import it back
+  in (creates real commits), and a site health check (missing excerpts,
+  missing categories, oversized media)
+- **Profile** — author bio, role, and social links, stored at
+  `authors/<username>.json`
+- **Customize Site** — accent color, headline font, and toggles for each
+  homepage section (hero, sidebar rail, quote box, photo cards,
+  newsletter strip, category rails) — these are read live by the public
+  front page
+
+## What's intentionally not real-time database-backed
+
+Activity Log and revision history are both real git history, not a
+separate log — so they're exactly as complete as your commit history and
+need no extra storage. Quick Draft and bulk actions create real commits
+the same way the main editor does; there's still no database anywhere in
+this project.
+
 ## One manual step before this works: point the front page at your repo
 
 The public front page (`index.html`, `article.html`) doesn't require
@@ -163,7 +198,8 @@ assets/js/
 
 cms/                     Private dashboard - everything here requires login
   login.html, select-repo.html, dashboard.html, articles.html,
-  editor.html, media.html, categories.html, settings.html
+  editor.html, media.html, categories.html, settings.html,
+  activity.html, tools.html, profile.html, customizer.html
 ```
 
 ## Extending this CMS

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tools · The Raga Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/css/tokens.css" />
+<link rel="stylesheet" href="../assets/css/shell.css" />
+<style>
+  .tool-card { border: 1px solid var(--hairline); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; }
+  .tool-card h3 { font-size: 15.5px; margin-bottom: 4px; }
+  .tool-card p { font-size: 13px; color: var(--ink-faint); margin: 0 0 14px; line-height: 1.5; }
+  .tool-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .health-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--hairline); font-size: 13.5px; }
+  .health-row:first-child { border-top: none; }
+  .health-status { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; }
+  .health-ok { color: var(--sage); }
+  .health-warn { color: var(--brass-600); }
+  .health-bad { color: var(--rust); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-ok { background: var(--sage); }
+  .dot-warn { background: var(--brass-500); }
+  .dot-bad { background: var(--rust); }
+</style>
+</head>
+<body>
+<div id="app-shell"></div>
+
+<script src="../assets/js/github.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/markdown.js"></script>
+<script src="../assets/js/util.js"></script>
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/articles.js"></script>
+<script src="../assets/js/media.js"></script>
+<script>
+  const session = Shell.mount('tools');
+  if (session) {
+    const { account, target } = session;
+    const root = Shell.pageRoot();
+
+    root.innerHTML = `
+      <div class="page medium rise-in">
+        <h1 class="font-display" style="font-size:26px;margin-bottom:4px;">Tools</h1>
+        <p class="faint" style="font-size:13.5px;margin:0 0 24px;">Export, import, and check the health of your repository.</p>
+
+        <section class="tool-card">
+          <h3>Export all content</h3>
+          <p>Download every article and your categories/tags as a single JSON file — a portable backup you can keep, or use to migrate content elsewhere.</p>
+          <div class="tool-actions">
+            <button id="exportBtn" class="btn btn-primary btn-sm">Download export.json</button>
+          </div>
+        </section>
+
+        <section class="tool-card">
+          <h3>Import content</h3>
+          <p>Restore articles from a previously exported JSON file. Existing articles with the same path will be overwritten — this commits to GitHub.</p>
+          <div class="tool-actions">
+            <input type="file" id="importFile" accept=".json" style="display:none;" />
+            <button id="importBtn" class="btn btn-ghost btn-sm">Choose file to import</button>
+          </div>
+          <p id="importStatus" style="margin-top:10px; display:none;"></p>
+        </section>
+
+        <section class="tool-card">
+          <h3>Site health</h3>
+          <p>A quick check of common issues — broken links, missing fields, oversized media.</p>
+          <div id="healthChecks">
+            <div class="center-loading"><span class="spinner"></span> Running checks...</div>
+          </div>
+        </section>
+
+        <section class="tool-card">
+          <h3>Repository info</h3>
+          <div id="repoInfoBox" class="center-loading"><span class="spinner"></span> Loading...</div>
+        </section>
+      </div>
+    `;
+
+    // ---------- Export ----------
+    document.getElementById('exportBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('exportBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Preparing...';
+      try {
+        const articles = await Articles.list(account.token, target.owner, target.repo, target.branch);
+        const full = await Promise.all(
+          articles.map((a) => Articles.load(account.token, target.owner, target.repo, target.branch, a.path))
+        );
+        let taxonomy = { categories: [], tags: [] };
+        const taxFile = await window.GitHubAPI.getFile(account.token, target.owner, target.repo, target.branch, 'config/taxonomy.json');
+        if (taxFile) taxonomy = JSON.parse(taxFile.content);
+
+        const bundle = {
+          exportedAt: new Date().toISOString(),
+          repo: `${target.owner}/${target.repo}`,
+          articles: full.filter(Boolean),
+          taxonomy,
+        };
+        const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `raga-journal-export-${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast('Export downloaded');
+      } catch (err) {
+        toast(err.message || 'Could not export content.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Download export.json';
+      }
+    });
+
+    // ---------- Import ----------
+    const importFile = document.getElementById('importFile');
+    document.getElementById('importBtn').addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const status = document.getElementById('importStatus');
+      status.style.display = 'block';
+      status.textContent = 'Reading file...';
+      try {
+        const text = await file.text();
+        const bundle = JSON.parse(text);
+        if (!Array.isArray(bundle.articles)) throw new Error('This file does not look like a Raga Journal export.');
+        if (!confirm(`Import ${bundle.articles.length} article(s) from this file? Matching paths will be overwritten.`)) {
+          status.style.display = 'none';
+          return;
+        }
+        let done = 0;
+        for (const article of bundle.articles) {
+          status.textContent = `Importing ${done + 1} of ${bundle.articles.length}...`;
+          const existing = await window.GitHubAPI.getFile(account.token, target.owner, target.repo, target.branch, article.path);
+          await Articles.save(account.token, target.owner, target.repo, target.branch, {
+            existingPath: existing ? article.path : null,
+            existingSha: existing ? existing.sha : null,
+            frontmatter: article.frontmatter,
+            body: article.body,
+            commitMessage: `Import article: ${article.frontmatter.title}`,
+          });
+          done++;
+        }
+        status.textContent = `Imported ${done} article(s) successfully.`;
+        toast('Import complete');
+      } catch (err) {
+        status.textContent = 'Import failed: ' + (err.message || 'unknown error');
+      } finally {
+        e.target.value = '';
+      }
+    });
+
+    // ---------- Site health ----------
+    (async () => {
+      const checks = [];
+      try {
+        const articles = await Articles.list(account.token, target.owner, target.repo, target.branch);
+        const missingExcerpt = articles.filter(a => !a.frontmatter.excerpt).length;
+        const missingCategory = articles.filter(a => !(a.frontmatter.categories||[]).length).length;
+        const noTitle = articles.filter(a => !a.frontmatter.title || a.frontmatter.title === 'Untitled').length;
+
+        checks.push({ label: `${articles.length} articles found`, status: 'ok' });
+        checks.push({
+          label: `${missingExcerpt} article(s) missing an excerpt`,
+          status: missingExcerpt === 0 ? 'ok' : 'warn',
+        });
+        checks.push({
+          label: `${missingCategory} article(s) with no category`,
+          status: missingCategory === 0 ? 'ok' : 'warn',
+        });
+        checks.push({
+          label: noTitle === 0 ? 'All articles have titles' : `${noTitle} article(s) missing a title`,
+          status: noTitle === 0 ? 'ok' : 'bad',
+        });
+
+        const media = await Media.list(account.token, target.owner, target.repo, target.branch);
+        const heavy = media.filter(m => m.size > 2 * 1024 * 1024).length;
+        checks.push({
+          label: heavy === 0 ? 'No oversized media files' : `${heavy} media file(s) over 2MB — consider compressing`,
+          status: heavy === 0 ? 'ok' : 'warn',
+        });
+      } catch (err) {
+        checks.push({ label: 'Could not complete all checks: ' + (err.message || ''), status: 'bad' });
+      }
+
+      const dotClass = { ok: 'dot-ok', warn: 'dot-warn', bad: 'dot-bad' };
+      const textClass = { ok: 'health-ok', warn: 'health-warn', bad: 'health-bad' };
+      const labelText = { ok: 'Good', warn: 'Check', bad: 'Issue' };
+
+      document.getElementById('healthChecks').innerHTML = checks.map(c => `
+        <div class="health-row">
+          <span>${escapeHtml(c.label)}</span>
+          <span class="health-status ${textClass[c.status]}"><span class="dot ${dotClass[c.status]}"></span>${labelText[c.status]}</span>
+        </div>
+      `).join('');
+    })();
+
+    // ---------- Repo info ----------
+    (async () => {
+      try {
+        const info = await window.GitHubAPI.getRepoInfo(account.token, target.owner, target.repo);
+        document.getElementById('repoInfoBox').innerHTML = `
+          <div class="health-row"><span>Visibility</span><span>${info.private ? 'Private' : 'Public'}</span></div>
+          <div class="health-row"><span>Default branch</span><span class="mono">${escapeHtml(info.default_branch)}</span></div>
+          <div class="health-row"><span>Size</span><span>${(info.size/1024).toFixed(1)} MB</span></div>
+          <div class="health-row"><span>Last updated</span><span>${timeAgo(info.updated_at)}</span></div>
+        `;
+      } catch (err) {
+        document.getElementById('repoInfoBox').innerHTML = `<div class="empty-row">${escapeHtml(err.message || 'Could not load repository info.')}</div>`;
+      }
+    })();
+  }
+</script>
+</body>
+</html>

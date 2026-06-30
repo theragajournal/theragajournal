@@ -10,28 +10,49 @@
 <link rel="stylesheet" href="../assets/css/shell.css" />
 <style>
   .dropzone {
-    border: 2px dashed var(--hairline); border-radius: 12px; padding: 44px 20px;
-    text-align: center; cursor: pointer; margin-bottom: 32px; transition: border-color 0.15s, background-color 0.15s;
+    border: 2px dashed var(--hairline); border-radius: 12px; padding: 32px 20px;
+    text-align: center; cursor: pointer; margin-bottom: 22px; transition: border-color 0.15s, background-color 0.15s;
   }
   .dropzone:hover, .dropzone.drag-over { border-color: var(--brass-300); background: var(--brass-50); }
   .dropzone svg { color: var(--ink-faint); margin-bottom: 8px; }
+
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .search-box { position: relative; max-width: 220px; flex: 1; }
+  .search-box svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--ink-faint); }
+  .search-box input { padding-left: 32px; }
+  .pill { padding: 6px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--paper-dim); color: var(--ink-soft); border: none; cursor: pointer; }
+  .pill.active { background: var(--ink); color: var(--paper); }
+  .view-toggle { display: flex; border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; margin-left: auto; }
+  .view-toggle button { background: #fff; border: none; padding: 7px 10px; cursor: pointer; color: var(--ink-faint); }
+  .view-toggle button.active { background: var(--ink); color: var(--paper); }
+
+  .bulk-bar { display: none; align-items: center; gap: 10px; padding: 10px 16px; background: var(--brass-50); border: 1px solid var(--brass-200); border-radius: 8px; margin-bottom: 14px; }
+  .bulk-bar.show { display: flex; }
+
   .media-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
   @media (max-width: 1000px) { .media-grid { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 640px) { .media-grid { grid-template-columns: repeat(2, 1fr); } }
-  .media-card { border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; background: #fff; }
+  .media-card { border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; background: #fff; position: relative; }
   .media-thumb { aspect-ratio: 1; background: var(--paper-dim); display: flex; align-items: center; justify-content: center; color: var(--ink-faint); position: relative; overflow: hidden; }
   .media-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .media-overlay {
-    position: absolute; inset: 0; background: rgba(28,27,25,0.7); opacity: 0;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    transition: opacity 0.15s;
-  }
+  .media-select-cb { position: absolute; top: 8px; left: 8px; z-index: 2; width: 16px; height: 16px; accent-color: var(--brass-500); }
+  .media-overlay { position: absolute; inset: 0; background: rgba(28,27,25,0.7); opacity: 0; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.15s; }
   .media-card:hover .media-overlay { opacity: 1; }
   .media-overlay button { background: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink); }
   .media-overlay button.danger { color: var(--rust); }
   .media-info { padding: 8px 10px; }
   .media-info .fname { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .media-info .fsize { font-size: 11px; color: var(--ink-faint); }
+
+  .media-list-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+  .media-list-row:hover { background: rgba(28,27,25,0.02); }
+  .media-list-thumb { width: 36px; height: 36px; border-radius: 6px; background: var(--paper-dim); display: flex; align-items: center; justify-content: center; color: var(--ink-faint); overflow: hidden; flex-shrink: 0; }
+  .media-list-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .media-list-name { flex: 1; font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .media-list-meta { font-size: 11.5px; color: var(--ink-faint); flex-shrink: 0; }
+  .media-list-actions { display: flex; gap: 2px; flex-shrink: 0; }
+  .media-list-actions button { background: none; border: none; cursor: pointer; color: var(--ink-faint); padding: 6px; }
+  .media-list-actions button:hover { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -49,10 +70,19 @@
     const { account, target } = session;
     const root = Shell.pageRoot();
 
+    const TYPE_FILTERS = [
+      { key: 'all', label: 'All' },
+      { key: 'image', label: 'Images' },
+      { key: 'video', label: 'Video' },
+      { key: 'audio', label: 'Audio' },
+      { key: 'pdf', label: 'PDF' },
+      { key: 'document', label: 'Docs' },
+    ];
+
     root.innerHTML = `
       <div class="page rise-in">
         <h1 class="font-display" style="font-size:28px;margin-bottom:4px;">Media Library</h1>
-        <p class="faint" style="font-size:13.5px;margin:0 0 24px;">
+        <p class="faint" style="font-size:13.5px;margin:0 0 20px;">
           Files upload directly into <code class="mono" style="background:var(--paper-dim);padding:1px 5px;border-radius:4px;">media/</code> in your repository.
         </p>
 
@@ -62,15 +92,39 @@
         </div>
         <input type="file" id="fileInput" multiple style="display:none;" />
 
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="searchInput" class="input" placeholder="Search filenames..." />
+          </div>
+          <div id="typeFilters">
+            ${TYPE_FILTERS.map(f => `<button class="pill ${f.key === 'all' ? 'active' : ''}" data-type="${f.key}">${f.label}</button>`).join('')}
+          </div>
+          <div class="view-toggle">
+            <button id="viewGridBtn" class="active" title="Grid view"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
+            <button id="viewListBtn" title="List view"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+          </div>
+        </div>
+
+        <div class="bulk-bar" id="bulkBar">
+          <span style="font-size:12.5px;font-weight:500;color:var(--brass-700);" id="bulkCount">0 selected</span>
+          <button id="bulkDeleteBtn" class="btn btn-danger btn-sm">Delete selected</button>
+          <button id="bulkClearBtn" class="btn btn-ghost btn-sm" style="margin-left:auto;">Clear</button>
+        </div>
+
         <div id="errorBox" class="alert alert-error" style="display:none;"></div>
-        <div id="mediaGrid"><div class="center-loading"><span class="spinner"></span> Loading media...</div></div>
+        <div id="mediaContainer"><div class="center-loading"><span class="spinner"></span> Loading media...</div></div>
       </div>
     `;
 
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
-    const mediaGrid = document.getElementById('mediaGrid');
+    const mediaContainer = document.getElementById('mediaContainer');
     let items = [];
+    let currentType = 'all';
+    let currentQuery = '';
+    let viewMode = 'grid';
+    let selectedPaths = new Set();
 
     function typeIconSvg(type) {
       const icons = {
@@ -83,40 +137,28 @@
       return `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">${icons[type] || icons.other}</svg>`;
     }
 
-    function render() {
-      if (items.length === 0) {
-        mediaGrid.innerHTML = `<p class="faint" style="text-align:center;font-size:13.5px;padding:48px 0;">Nothing uploaded yet. Drop a file above to get started.</p>`;
-        return;
-      }
-      mediaGrid.innerHTML = `<div class="media-grid">${items.map((item) => `
-        <div class="media-card" data-path="${escapeHtml(item.path)}">
-          <div class="media-thumb">
-            ${item.type === 'image'
-              ? `<img src="${item.url}" alt="${escapeHtml(item.name)}" />`
-              : typeIconSvg(item.type)}
-            <div class="media-overlay">
-              <button class="copy-btn" data-url="${escapeHtml(item.url)}" title="Copy URL">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              </button>
-              <button class="danger del-btn" data-path="${escapeHtml(item.path)}" title="Delete">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
-              </button>
-            </div>
-          </div>
-          <div class="media-info">
-            <div class="fname">${escapeHtml(item.name)}</div>
-            <div class="fsize">${(item.size/1024).toFixed(0)} KB</div>
-          </div>
-        </div>
-      `).join('')}</div>`;
+    function getFiltered() {
+      return items.filter(i => {
+        if (currentType !== 'all' && i.type !== currentType) return false;
+        if (currentQuery && !i.name.toLowerCase().includes(currentQuery.toLowerCase())) return false;
+        return true;
+      });
+    }
 
-      mediaGrid.querySelectorAll('.copy-btn').forEach((btn) => {
+    function updateBulkBar() {
+      const bar = document.getElementById('bulkBar');
+      bar.classList.toggle('show', selectedPaths.size > 0);
+      document.getElementById('bulkCount').textContent = `${selectedPaths.size} selected`;
+    }
+
+    function bindCommonActions(scope) {
+      scope.querySelectorAll('.copy-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           navigator.clipboard.writeText(btn.dataset.url);
           toast('URL copied to clipboard');
         });
       });
-      mediaGrid.querySelectorAll('.del-btn').forEach((btn) => {
+      scope.querySelectorAll('.del-btn').forEach((btn) => {
         btn.addEventListener('click', async () => {
           const item = items.find((i) => i.path === btn.dataset.path);
           if (!item) return;
@@ -124,6 +166,7 @@
           try {
             await Media.remove(account.token, target.owner, target.repo, target.branch, item);
             items = items.filter((i) => i.path !== item.path);
+            selectedPaths.delete(item.path);
             toast('Media deleted');
             render();
           } catch (err) {
@@ -131,7 +174,123 @@
           }
         });
       });
+      scope.querySelectorAll('[data-select]').forEach((cb) => {
+        cb.addEventListener('change', (e) => {
+          const path = e.target.dataset.select;
+          if (e.target.checked) selectedPaths.add(path); else selectedPaths.delete(path);
+          updateBulkBar();
+        });
+      });
     }
+
+    function render() {
+      const filtered = getFiltered();
+      if (filtered.length === 0) {
+        mediaContainer.innerHTML = `<p class="faint" style="text-align:center;font-size:13.5px;padding:48px 0;">Nothing matches here yet.</p>`;
+        updateBulkBar();
+        return;
+      }
+
+      if (viewMode === 'grid') {
+        mediaContainer.innerHTML = `<div class="media-grid">${filtered.map((item) => `
+          <div class="media-card" data-path="${escapeHtml(item.path)}">
+            <input type="checkbox" class="media-select-cb" data-select="${escapeHtml(item.path)}" ${selectedPaths.has(item.path) ? 'checked' : ''} />
+            <div class="media-thumb">
+              ${item.type === 'image' ? `<img src="${item.url}" alt="${escapeHtml(item.name)}" />` : typeIconSvg(item.type)}
+              <div class="media-overlay">
+                <button class="copy-btn" data-url="${escapeHtml(item.url)}" title="Copy URL">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+                <button class="danger del-btn" data-path="${escapeHtml(item.path)}" title="Delete">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="media-info">
+              <div class="fname">${escapeHtml(item.name)}</div>
+              <div class="fsize">${(item.size/1024).toFixed(0)} KB</div>
+            </div>
+          </div>
+        `).join('')}</div>`;
+      } else {
+        mediaContainer.innerHTML = `<div class="panel divide">${filtered.map((item) => `
+          <div class="media-list-row">
+            <input type="checkbox" class="row-checkbox" data-select="${escapeHtml(item.path)}" ${selectedPaths.has(item.path) ? 'checked' : ''} />
+            <div class="media-list-thumb">
+              ${item.type === 'image' ? `<img src="${item.url}" alt="" />` : typeIconSvg(item.type)}
+            </div>
+            <div class="media-list-name">${escapeHtml(item.name)}</div>
+            <div class="media-list-meta">${(item.size/1024).toFixed(0)} KB</div>
+            <div class="media-list-actions">
+              <button class="copy-btn" data-url="${escapeHtml(item.url)}" title="Copy URL">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+              <button class="del-btn" data-path="${escapeHtml(item.path)}" title="Delete">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+              </button>
+            </div>
+          </div>
+        `).join('')}</div>`;
+      }
+
+      bindCommonActions(mediaContainer);
+      updateBulkBar();
+    }
+
+    document.getElementById('typeFilters').addEventListener('click', (e) => {
+      const btn = e.target.closest('.pill');
+      if (!btn) return;
+      currentType = btn.dataset.type;
+      document.querySelectorAll('#typeFilters .pill').forEach(p => p.classList.toggle('active', p === btn));
+      render();
+    });
+
+    document.getElementById('searchInput').addEventListener('input', debounce((e) => {
+      currentQuery = e.target.value;
+      render();
+    }, 150));
+
+    document.getElementById('viewGridBtn').addEventListener('click', () => {
+      viewMode = 'grid';
+      document.getElementById('viewGridBtn').classList.add('active');
+      document.getElementById('viewListBtn').classList.remove('active');
+      render();
+    });
+    document.getElementById('viewListBtn').addEventListener('click', () => {
+      viewMode = 'list';
+      document.getElementById('viewListBtn').classList.add('active');
+      document.getElementById('viewGridBtn').classList.remove('active');
+      render();
+    });
+
+    document.getElementById('bulkClearBtn').addEventListener('click', () => {
+      selectedPaths.clear();
+      render();
+    });
+
+    document.getElementById('bulkDeleteBtn').addEventListener('click', async () => {
+      if (selectedPaths.size === 0) return;
+      if (!confirm(`Delete ${selectedPaths.size} file(s)? This commits ${selectedPaths.size} deletion(s) to GitHub.`)) return;
+      const btn = document.getElementById('bulkDeleteBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Deleting...';
+      let failed = 0;
+      for (const path of Array.from(selectedPaths)) {
+        const item = items.find(i => i.path === path);
+        if (!item) continue;
+        try {
+          await Media.remove(account.token, target.owner, target.repo, target.branch, item);
+          items = items.filter(i => i.path !== path);
+          selectedPaths.delete(path);
+        } catch {
+          failed++;
+        }
+      }
+      btn.disabled = false;
+      btn.textContent = 'Delete selected';
+      toast(failed > 0 ? `Deleted with ${failed} failure(s)` : 'Selected files deleted');
+      render();
+    });
 
     async function reload() {
       try {
@@ -140,7 +299,7 @@
       } catch (err) {
         document.getElementById('errorBox').textContent = err.message || 'Could not load the media library.';
         document.getElementById('errorBox').style.display = 'block';
-        mediaGrid.innerHTML = '';
+        mediaContainer.innerHTML = '';
       }
     }
 

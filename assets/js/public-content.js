@@ -30,7 +30,8 @@ const PublicContent = {
 
   async _fetchRaw(path) {
     const { owner, repo, branch } = window.SITE_REPO;
-    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`);
+    const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${encodedPath}`);
     if (!res.ok) {
       if (res.status === 404) return null;
       throw new Error(`Could not fetch ${path} (${res.status})`);
@@ -49,11 +50,16 @@ const PublicContent = {
     const mdFiles = dirData.filter((f) => f.type === 'file' && f.name.endsWith('.md'));
     const loaded = await Promise.all(
       mdFiles.map(async (f) => {
-        const raw = await this._fetchRaw(f.path);
-        if (!raw) return null;
-        const { frontmatter, body } = window.MD.parseArticleFile(raw);
-        if (frontmatter.status !== 'published') return null;
-        return { path: f.path, frontmatter, body };
+        try {
+          const raw = await this._fetchRaw(f.path);
+          if (!raw) return null;
+          const { frontmatter, body } = window.MD.parseArticleFile(raw);
+          if (frontmatter.status !== 'published') return null;
+          return { path: f.path, frontmatter, body };
+        } catch (err) {
+          console.warn('Skipping article that failed to load:', f.path, err);
+          return null;
+        }
       })
     );
     const valid = loaded.filter(Boolean);

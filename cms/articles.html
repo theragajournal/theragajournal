@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="../assets/css/tokens.css" />
 <link rel="stylesheet" href="../assets/css/shell.css" />
 <style>
-  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
   .search-box { position: relative; max-width: 260px; flex: 1; }
   .search-box svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--ink-faint); }
   .search-box input { padding-left: 32px; }
@@ -21,17 +21,36 @@
   }
   .pill.active { background: var(--ink); color: var(--paper); }
   .pill:hover:not(.active) { background: var(--hairline); }
-  .article-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 15px 18px; }
+  .sort-select { font-size: 12.5px; padding: 7px 10px; }
+
+  .bulk-bar {
+    display: none; align-items: center; gap: 10px; padding: 10px 16px; background: var(--brass-50);
+    border: 1px solid var(--brass-200); border-radius: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .bulk-bar.show { display: flex; }
+  .bulk-bar select { font-size: 12.5px; padding: 6px 10px; }
+  .bulk-count { font-size: 12.5px; font-weight: 500; color: var(--brass-700); }
+
+  .list-head-row { display: flex; align-items: center; gap: 14px; padding: 10px 18px; border-bottom: 1px solid var(--hairline); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); }
+  .row-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--brass-500); flex-shrink: 0; }
+
+  .article-row { display: flex; align-items: center; gap: 14px; padding: 15px 18px; }
   .article-row:hover { background: rgba(28,27,25,0.02); }
   .article-row .open-btn { flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer; padding: 0; }
   .article-row .ttl-line { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
   .article-row .ttl { font-size: 13.5px; font-weight: 500; }
   .article-row .preview { font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .article-row .path-line { font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
-  .article-row .del-btn { opacity: 0; background: none; border: none; cursor: pointer; color: var(--ink-faint); padding: 6px; flex-shrink: 0; transition: opacity 0.15s, color 0.15s; }
-  .article-row:hover .del-btn { opacity: 1; }
-  .article-row .del-btn:hover { color: var(--rust); }
+  .row-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.15s; flex-shrink: 0; }
+  .article-row:hover .row-actions { opacity: 1; }
+  .row-actions button { background: none; border: none; cursor: pointer; color: var(--ink-faint); padding: 6px; }
+  .row-actions button:hover { color: var(--ink); }
+  .row-actions .del-btn:hover { color: var(--rust); }
   .featured-flag { font-size: 11px; color: var(--brass-600); font-weight: 500; }
+
+  .quick-edit-row { padding: 16px 18px; background: var(--paper-dim); border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
+  .quick-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 640px) { .quick-edit-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -75,10 +94,37 @@
           <div class="filter-pills" id="filterPills">
             ${FILTERS.map(f => `<button class="pill ${f.key === 'all' ? 'active' : ''}" data-filter="${f.key}">${f.label}</button>`).join('')}
           </div>
+          <select id="sortSelect" class="input sort-select" style="margin-left:auto;width:auto;">
+            <option value="updated-desc">Last updated</option>
+            <option value="title-asc">Title A–Z</option>
+            <option value="title-desc">Title Z–A</option>
+          </select>
         </div>
+
+        <div class="bulk-bar" id="bulkBar">
+          <span class="bulk-count" id="bulkCount">0 selected</span>
+          <select id="bulkStatusSelect" class="input">
+            <option value="">Change status to…</option>
+            <option value="draft">Draft</option>
+            <option value="review">In review</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+          </select>
+          <button id="bulkApplyBtn" class="btn btn-ghost btn-sm">Apply</button>
+          <button id="bulkDeleteBtn" class="btn btn-danger btn-sm">Delete selected</button>
+          <button id="bulkClearBtn" class="btn btn-ghost btn-sm" style="margin-left:auto;">Clear selection</button>
+        </div>
+
         <div id="errorBox" class="alert alert-error" style="display:none;"></div>
-        <div class="panel divide" id="articleList">
-          <div class="center-loading"><span class="spinner"></span> Loading articles...</div>
+        <div class="panel" id="articleListWrap">
+          <div class="list-head-row">
+            <input type="checkbox" id="selectAllCheckbox" class="row-checkbox" />
+            <span>Title</span>
+          </div>
+          <div class="divide" id="articleList">
+            <div class="center-loading"><span class="spinner"></span> Loading articles...</div>
+          </div>
         </div>
       </div>
     `;
@@ -86,38 +132,107 @@
     let allItems = [];
     let currentFilter = 'all';
     let currentQuery = '';
+    let currentSort = 'updated-desc';
+    let selectedPaths = new Set();
+    let quickEditPath = null;
 
-    function render() {
-      const list = document.getElementById('articleList');
-      const filtered = allItems.filter((a) => {
+    function applySort(items) {
+      const sorted = [...items];
+      if (currentSort === 'title-asc') sorted.sort((a,b) => a.frontmatter.title.localeCompare(b.frontmatter.title));
+      else if (currentSort === 'title-desc') sorted.sort((a,b) => b.frontmatter.title.localeCompare(a.frontmatter.title));
+      else sorted.sort((a,b) => new Date(b.frontmatter.updatedAt) - new Date(a.frontmatter.updatedAt));
+      return sorted;
+    }
+
+    function getFiltered() {
+      let items = allItems.filter((a) => {
         if (currentFilter !== 'all' && a.frontmatter.status !== currentFilter) return false;
         if (currentQuery && !a.frontmatter.title.toLowerCase().includes(currentQuery.toLowerCase())) return false;
         return true;
       });
+      return applySort(items);
+    }
+
+    function updateBulkBar() {
+      const bar = document.getElementById('bulkBar');
+      const count = selectedPaths.size;
+      bar.classList.toggle('show', count > 0);
+      document.getElementById('bulkCount').textContent = `${count} selected`;
+    }
+
+    function quickEditHtml(a) {
+      return `
+        <div class="quick-edit-row">
+          <div class="quick-edit-grid">
+            <div>
+              <label class="field-label">Title</label>
+              <input class="input" id="qeTitle" value="${escapeHtml(a.frontmatter.title)}" />
+            </div>
+            <div>
+              <label class="field-label">Status</label>
+              <select class="input" id="qeStatus">
+                ${FILTERS.filter(f=>f.key!=='all').map(f => `<option value="${f.key}" ${a.frontmatter.status===f.key?'selected':''}>${f.label}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm" id="qeSaveBtn">Save</button>
+            <button class="btn btn-ghost btn-sm" id="qeCancelBtn">Cancel</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function render() {
+      const list = document.getElementById('articleList');
+      const filtered = getFiltered();
       if (filtered.length === 0) {
         list.innerHTML = `<div class="empty-row">No articles match these filters.</div>`;
+        updateBulkBar();
         return;
       }
       list.innerHTML = filtered.map((a) => `
-        <div class="article-row" data-path="${escapeHtml(a.path)}">
-          <button class="open-btn" data-open="${escapeHtml(a.path)}">
-            <div class="ttl-line">
-              <span class="ttl">${escapeHtml(a.frontmatter.title)}</span>
-              <span class="badge badge-${a.frontmatter.status}">${a.frontmatter.status}</span>
-              ${a.frontmatter.featured ? '<span class="featured-flag">★ Featured</span>' : ''}
+        ${quickEditPath === a.path ? quickEditHtml(a) : `
+          <div class="article-row" data-path="${escapeHtml(a.path)}">
+            <input type="checkbox" class="row-checkbox" data-select="${escapeHtml(a.path)}" ${selectedPaths.has(a.path) ? 'checked' : ''} />
+            <button class="open-btn" data-open="${escapeHtml(a.path)}">
+              <div class="ttl-line">
+                <span class="ttl">${escapeHtml(a.frontmatter.title)}</span>
+                <span class="badge badge-${a.frontmatter.status}">${a.frontmatter.status}</span>
+                ${a.frontmatter.featured ? '<span class="featured-flag">★ Featured</span>' : ''}
+              </div>
+              <div class="preview">${escapeHtml(a.preview)}</div>
+              <div class="path-line mono">${escapeHtml(a.path)} · updated ${timeAgo(a.frontmatter.updatedAt)}</div>
+            </button>
+            <div class="row-actions">
+              <button data-quickedit="${escapeHtml(a.path)}" title="Quick edit">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <button class="del-btn" data-delete="${escapeHtml(a.path)}" title="Delete">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+              </button>
             </div>
-            <div class="preview">${escapeHtml(a.preview)}</div>
-            <div class="path-line mono">${escapeHtml(a.path)} · updated ${timeAgo(a.frontmatter.updatedAt)}</div>
-          </button>
-          <button class="del-btn" data-delete="${escapeHtml(a.path)}" title="Delete">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
-          </button>
-        </div>
+          </div>
+        `}
       `).join('');
 
       list.querySelectorAll('[data-open]').forEach((btn) => {
         btn.addEventListener('click', () => {
           location.href = `editor.html?path=${encodeURIComponent(btn.dataset.open)}`;
+        });
+      });
+      list.querySelectorAll('[data-select]').forEach((cb) => {
+        cb.addEventListener('change', (e) => {
+          const path = e.target.dataset.select;
+          if (e.target.checked) selectedPaths.add(path); else selectedPaths.delete(path);
+          updateBulkBar();
+        });
+      });
+      list.querySelectorAll('[data-quickedit]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          quickEditPath = btn.dataset.quickedit;
+          render();
         });
       });
       list.querySelectorAll('[data-delete]').forEach((btn) => {
@@ -131,14 +246,49 @@
           try {
             await Articles.remove(account.token, target.owner, target.repo, target.branch, item);
             allItems = allItems.filter((a) => a.path !== path);
+            selectedPaths.delete(path);
             toast('Article deleted');
             render();
+            updateBulkBar();
           } catch (err) {
             toast(err.message || 'Could not delete this article.', 'error');
             render();
           }
         });
       });
+
+      const qeSave = document.getElementById('qeSaveBtn');
+      if (qeSave) {
+        qeSave.addEventListener('click', async () => {
+          const item = allItems.find((a) => a.path === quickEditPath);
+          if (!item) return;
+          qeSave.disabled = true;
+          qeSave.innerHTML = '<span class="spinner"></span>';
+          try {
+            const newTitle = document.getElementById('qeTitle').value;
+            const newStatus = document.getElementById('qeStatus').value;
+            const full = await Articles.load(account.token, target.owner, target.repo, target.branch, item.path);
+            const updatedFrontmatter = { ...full.frontmatter, title: newTitle, status: newStatus };
+            const result = await Articles.save(account.token, target.owner, target.repo, target.branch, {
+              existingPath: full.path,
+              existingSha: full.sha,
+              frontmatter: updatedFrontmatter,
+              body: full.body,
+              commitMessage: `Quick edit: ${newTitle}`,
+            });
+            quickEditPath = null;
+            toast('Article updated');
+            allItems = await Articles.list(account.token, target.owner, target.repo, target.branch);
+            render();
+          } catch (err) {
+            toast(err.message || 'Could not save changes.', 'error');
+          }
+        });
+      }
+      const qeCancel = document.getElementById('qeCancelBtn');
+      if (qeCancel) qeCancel.addEventListener('click', () => { quickEditPath = null; render(); });
+
+      updateBulkBar();
     }
 
     document.getElementById('filterPills').addEventListener('click', (e) => {
@@ -153,6 +303,77 @@
       currentQuery = e.target.value;
       render();
     }, 150));
+
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+      currentSort = e.target.value;
+      render();
+    });
+
+    document.getElementById('selectAllCheckbox').addEventListener('change', (e) => {
+      const filtered = getFiltered();
+      if (e.target.checked) filtered.forEach(a => selectedPaths.add(a.path));
+      else filtered.forEach(a => selectedPaths.delete(a.path));
+      render();
+    });
+
+    document.getElementById('bulkClearBtn').addEventListener('click', () => {
+      selectedPaths.clear();
+      render();
+    });
+
+    document.getElementById('bulkDeleteBtn').addEventListener('click', async () => {
+      if (selectedPaths.size === 0) return;
+      if (!confirm(`Delete ${selectedPaths.size} article(s)? This commits ${selectedPaths.size} deletion(s) to GitHub.`)) return;
+      const btn = document.getElementById('bulkDeleteBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Deleting...';
+      let failed = 0;
+      for (const path of Array.from(selectedPaths)) {
+        const item = allItems.find(a => a.path === path);
+        if (!item) continue;
+        try {
+          await Articles.remove(account.token, target.owner, target.repo, target.branch, item);
+          allItems = allItems.filter(a => a.path !== path);
+          selectedPaths.delete(path);
+        } catch {
+          failed++;
+        }
+      }
+      btn.disabled = false;
+      btn.textContent = 'Delete selected';
+      toast(failed > 0 ? `Deleted with ${failed} failure(s)` : 'Selected articles deleted');
+      render();
+    });
+
+    document.getElementById('bulkApplyBtn').addEventListener('click', async () => {
+      const newStatus = document.getElementById('bulkStatusSelect').value;
+      if (!newStatus || selectedPaths.size === 0) return;
+      const btn = document.getElementById('bulkApplyBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+      let failed = 0;
+      for (const path of Array.from(selectedPaths)) {
+        try {
+          const full = await Articles.load(account.token, target.owner, target.repo, target.branch, path);
+          if (!full) continue;
+          await Articles.save(account.token, target.owner, target.repo, target.branch, {
+            existingPath: full.path,
+            existingSha: full.sha,
+            frontmatter: { ...full.frontmatter, status: newStatus },
+            body: full.body,
+            commitMessage: `Bulk update status to ${newStatus}: ${full.frontmatter.title}`,
+          });
+        } catch {
+          failed++;
+        }
+      }
+      selectedPaths.clear();
+      btn.disabled = false;
+      btn.textContent = 'Apply';
+      toast(failed > 0 ? `Updated with ${failed} failure(s)` : 'Status updated for selected articles');
+      allItems = await Articles.list(account.token, target.owner, target.repo, target.branch);
+      render();
+    });
 
     (async () => {
       try {
