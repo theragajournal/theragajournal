@@ -18,6 +18,11 @@
       "id": "tag-welcome",
       "name": "welcome",
       "slug": "welcome"
+    },
+    {
+      "id": "72f3e507-54bb-4041-b013-ac2a0d914cf4",
+      "name": "Tabla",
+      "slug": "tabla"
     }
   ]
 }
