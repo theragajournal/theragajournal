@@ -11,7 +11,7 @@
     "showSidebarRail": true,
     "showQuoteBox": true,
     "showPhotoCards": true,
-    "showNewsletter": false,
+    "showNewsletter": true,
     "showCategoryRails": true
   }
 }
