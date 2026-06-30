@@ -5,6 +5,12 @@
       "name": "Tabla",
       "slug": "tabla",
       "order": 1
+    },
+    {
+      "id": "f5f594a2-1300-4de9-9693-c3a4646264c0",
+      "name": "Zakir hussain",
+      "slug": "zakir-hussain",
+      "order": 1
     }
   ],
   "tags": [
