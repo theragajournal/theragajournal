@@ -286,8 +286,12 @@
     }
   }
 
-  Promise.all([PublicContent.listPublished().catch(() => []), loadSiteConfig()])
+  Promise.all([
+    PublicContent.listPublished().catch((err) => { console.error('listPublished failed:', err); window.__ragaDebugError = err; return []; }),
+    loadSiteConfig()
+  ])
     .then(([articles, siteConfig]) => {
+      console.log('Articles found:', articles.length, articles);
       if (siteConfig) applySiteConfig(siteConfig);
       renderFrontPage(articles, siteConfig ? siteConfig.homepage : null);
     });
