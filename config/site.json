@@ -7,9 +7,9 @@
     "fontDisplay": "playfair"
   },
   "homepage": {
-    "showHero": false,
-    "showSidebarRail": false,
-    "showQuoteBox": false,
+    "showHero": true,
+    "showSidebarRail": true,
+    "showQuoteBox": true,
     "showPhotoCards": false,
     "showNewsletter": false,
     "showCategoryRails": false
