@@ -4,7 +4,7 @@
   "theme": {
     "mode": "light",
     "accentColor": "#5C7A5C",
-    "fontDisplay": "playfair"
+    "fontDisplay": "inter"
   },
   "homepage": {
     "showHero": true,
