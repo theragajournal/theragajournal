@@ -3,6 +3,15 @@
   "tagline": "Notes on Indian classical music",
   "theme": {
     "mode": "light",
-    "accentColor": "#A8762E"
+    "accentColor": "#A8762E",
+    "fontDisplay": "inter"
+  },
+  "homepage": {
+    "showHero": true,
+    "showSidebarRail": true,
+    "showQuoteBox": true,
+    "showPhotoCards": true,
+    "showNewsletter": true,
+    "showCategoryRails": true
   }
 }
