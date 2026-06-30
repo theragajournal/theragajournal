@@ -11,7 +11,7 @@
  */
 
 window.SITE_REPO = {
-  owner: 'YOUR_GITHUB_USERNAME',
-  repo: 'YOUR_REPO_NAME',
+  owner: 'theragajournal,
+  repo: 'theragajournal,
   branch: 'main',
 };
