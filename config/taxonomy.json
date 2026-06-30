@@ -1,12 +1,6 @@
 {
   "categories": [
     {
-      "id": "cat-announcements",
-      "name": "Announcements",
-      "slug": "announcements",
-      "order": 0
-    },
-    {
       "id": "3b04a60f-319b-424e-a9c3-50bba9c5b78c",
       "name": "Tabla",
       "slug": "tabla",
