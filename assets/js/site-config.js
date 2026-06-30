@@ -11,7 +11,7 @@
  */
 
 window.SITE_REPO = {
-  owner: 'theragajournal,
-  repo: 'theragajournal,
+  owner: 'theragajournal',
+  repo: 'theragajournal',
   branch: 'main',
 };
