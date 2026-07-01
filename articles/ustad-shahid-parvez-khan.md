@@ -5,8 +5,8 @@ status: published
 excerpt: ''
 coverImage: ''
 authorId: ''
-categories: []
-tags: []
+categories: [#interviews]
+tags: [/interviews]
 publishedAt: ''
 scheduledFor: ''
 updatedAt: '2026-06-30T12:12:29.627Z'
