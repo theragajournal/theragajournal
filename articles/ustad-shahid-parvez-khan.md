@@ -5,7 +5,7 @@ status: published
 excerpt: ''
 coverImage: ''
 authorId: ''
-categories: [#interviews]
+categories: []
 tags: []
 publishedAt: ''
 scheduledFor: ''
