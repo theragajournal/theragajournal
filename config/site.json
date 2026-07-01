@@ -9,8 +9,8 @@
   "homepage": {
     "showHero": true,
     "showSidebarRail": true,
-    "showQuoteBox": true,
-    "showPhotoCards": false,
+    "showQuoteBox": false,
+    "showPhotoCards": true,
     "showNewsletter": false,
     "showCategoryRails": false
   }
