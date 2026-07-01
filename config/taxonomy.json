@@ -17,6 +17,12 @@
       "name": "Interviews",
       "slug": "interviews",
       "order": 2
+    },
+    {
+      "id": "f6bde8c0-202c-4fbf-b1dc-94a5fdfc000b",
+      "name": "#interviews",
+      "slug": "interviews",
+      "order": 3
     }
   ],
   "tags": [
