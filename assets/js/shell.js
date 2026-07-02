@@ -85,7 +85,7 @@ const Shell = {
             </button>
           </div>
           <div class="sidebar-new">
-            <a href="editor.html" class="btn btn-primary btn-block">
+            <a href="editor-pro.html" class="btn btn-primary btn-block">
               ${iconSvg('M12 5v14M5 12h14')}
               New article
             </a>
