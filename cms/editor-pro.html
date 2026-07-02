@@ -1,0 +1,1344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Editor Pro · The Raga Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/css/tokens.css" />
+<link rel="stylesheet" href="../assets/css/shell.css" />
+<style>
+/* ============================================================
+   Editor Pro — layout shell
+   ============================================================ */
+body { overflow: hidden; }
+
+.ep-shell { display:flex; height:100%; flex-direction:column; }
+
+/* Top toolbar */
+.ep-topbar {
+  display:flex; align-items:center; gap:4px; padding:6px 10px;
+  border-bottom:1px solid var(--hairline); background:var(--paper);
+  overflow-x:auto; position:sticky; top:0; z-index:15; flex-shrink:0;
+  scrollbar-width:none;
+}
+.ep-topbar::-webkit-scrollbar { display:none; }
+
+/* Toolbar button */
+.tb {
+  background:none; border:none; padding:7px; border-radius:6px; cursor:pointer;
+  color:var(--ink-soft); display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; min-width:32px; min-height:32px; transition:background 0.12s;
+  position:relative;
+}
+.tb:hover { background:var(--paper-dim); }
+.tb.on { background:var(--ink); color:var(--paper); }
+.tb.danger:hover { background:var(--rust-dim); color:var(--rust); }
+.tb svg { width:15px; height:15px; pointer-events:none; }
+.tb-sep { width:1px; height:18px; background:var(--hairline); margin:0 3px; flex-shrink:0; }
+.tb-label { font-size:11px; font-weight:600; letter-spacing:0.03em; padding:0 2px; }
+
+/* Dropdown from toolbar button */
+.tb-drop {
+  position:absolute; top:calc(100% + 6px); left:0; background:#fff;
+  border:1px solid var(--hairline); border-radius:8px; box-shadow:0 4px 14px rgba(0,0,0,0.12);
+  min-width:160px; z-index:100; padding:4px;
+}
+.tb-drop-item {
+  display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:6px;
+  font-size:13px; cursor:pointer; background:none; border:none; width:100%; text-align:left;
+  color:var(--ink);
+}
+.tb-drop-item:hover { background:var(--paper-dim); }
+
+/* Main area */
+.ep-main { display:flex; flex:1; min-height:0; }
+
+/* Left panel */
+.ep-left {
+  width:240px; flex-shrink:0; border-right:1px solid var(--hairline);
+  display:flex; flex-direction:column; background:var(--paper);
+  transition:width 0.2s, opacity 0.2s;
+  overflow:hidden;
+}
+.ep-left.collapsed { width:0; opacity:0; pointer-events:none; }
+.ep-left-inner { padding:12px; overflow-y:auto; flex:1; }
+.ep-panel-tab { display:flex; border-bottom:1px solid var(--hairline); margin:-12px -12px 12px; }
+.ep-tab {
+  flex:1; padding:9px 6px; font-size:11.5px; font-weight:600; text-align:center;
+  cursor:pointer; background:none; border:none; color:var(--ink-faint); border-bottom:2px solid transparent;
+}
+.ep-tab.on { color:var(--brass-600); border-bottom-color:var(--brass-500); }
+
+/* Editor canvas */
+.ep-canvas { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
+.ep-title-area { padding:28px 40px 0; max-width:750px; margin:0 auto; width:100%; }
+.ep-title {
+  width:100%; border:none; outline:none; background:none; font-family:'Fraunces',serif;
+  font-size:clamp(26px,4vw,40px); font-weight:500; color:var(--ink); padding:0; resize:none;
+  line-height:1.2; overflow:hidden;
+}
+.ep-meta-row { display:flex; align-items:center; gap:12px; padding:8px 40px; max-width:750px; margin:0 auto; width:100%; font-size:12px; color:var(--ink-faint); border-bottom:1px solid var(--hairline); flex-wrap:wrap; }
+.ep-meta-row span.sep { color:var(--hairline); }
+.ep-meta-row input { background:none; border:none; outline:none; font-size:12px; color:var(--ink-faint); font-family:inherit; }
+
+.ep-body {
+  flex:1; padding:24px 40px 120px; max-width:750px; margin:0 auto; width:100%;
+  outline:none; font-size:18px; line-height:1.8; color:var(--ink-soft); min-height:60vh;
+}
+.ep-body:empty::before { content:attr(data-ph); color:rgba(28,27,25,0.28); pointer-events:none; float:left; height:0; }
+
+/* Typography inside editor */
+.ep-body h1 { font-family:'Fraunces',serif; font-size:clamp(28px,5vw,38px); font-weight:500; margin:32px 0 12px; color:var(--ink); line-height:1.15; letter-spacing:-0.01em; }
+.ep-body h2 { font-family:'Fraunces',serif; font-size:clamp(22px,4vw,30px); font-weight:500; margin:28px 0 10px; color:var(--ink); line-height:1.2; }
+.ep-body h3 { font-family:'Fraunces',serif; font-size:clamp(18px,3vw,24px); font-weight:500; margin:24px 0 8px; color:var(--ink); }
+.ep-body h4 { font-family:'Fraunces',serif; font-size:18px; font-weight:500; margin:20px 0 6px; color:var(--ink); }
+.ep-body p { margin:0 0 18px; }
+.ep-body blockquote { border-left:3px solid var(--brass-500); padding:4px 0 4px 18px; margin:22px 0; font-style:italic; color:var(--ink-soft); }
+.ep-body .pullquote { border-top:3px solid var(--ink); border-bottom:3px solid var(--ink); padding:20px 0; margin:28px 0; text-align:center; font-family:'Fraunces',serif; font-size:clamp(18px,3vw,24px); font-style:italic; color:var(--ink); }
+.ep-body pre { background:var(--ink); color:#e8e6e0; border-radius:8px; padding:16px 18px; overflow-x:auto; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.6; margin:18px 0; }
+.ep-body code { background:var(--paper-dim); padding:2px 6px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:0.88em; }
+.ep-body pre code { background:none; padding:0; }
+.ep-body ul, .ep-body ol { padding-left:26px; margin:0 0 18px; }
+.ep-body ul { list-style:disc; }
+.ep-body ol { list-style:decimal; }
+.ep-body li { margin-bottom:4px; }
+.ep-body ul[data-checklist] { list-style:none; padding-left:0; }
+.ep-body ul[data-checklist] li { display:flex; gap:8px; align-items:flex-start; }
+.ep-body ul[data-checklist] li input { margin-top:4px; flex-shrink:0; accent-color:var(--brass-500); }
+.ep-body hr { border:none; border-top:1px solid var(--hairline); margin:32px 0; }
+.ep-body a { color:var(--brass-600); text-decoration:underline; }
+.ep-body img { max-width:100%; border-radius:6px; margin:16px 0; display:block; }
+.ep-body .img-full { width:100%; }
+.ep-body .img-large { width:75%; }
+.ep-body .img-medium { width:50%; }
+.ep-body .img-small { width:30%; }
+.ep-body .img-float-left { float:left; margin:4px 18px 8px 0; }
+.ep-body .img-float-right { float:right; margin:4px 0 8px 18px; }
+.ep-body figure { margin:20px 0; }
+.ep-body figcaption { font-size:13px; color:var(--ink-faint); text-align:center; margin-top:6px; font-style:italic; }
+.ep-body table { width:100%; border-collapse:collapse; margin:18px 0; font-size:14.5px; }
+.ep-body th, .ep-body td { border:1px solid var(--hairline); padding:8px 10px; }
+.ep-body th { background:var(--paper-dim); font-weight:600; text-align:left; }
+.ep-body .callout { border-radius:8px; padding:14px 16px; margin:18px 0; font-size:15px; border-left:3px solid; }
+.ep-body .callout-info { background:#EBF5FF; border-color:#3B8EE0; color:#1A4F8A; }
+.ep-body .callout-warning { background:#FFF8E1; border-color:#F59E0B; color:#7C4A00; }
+.ep-body .callout-success { background:var(--sage-dim); border-color:var(--sage); color:#2D5A2D; }
+.ep-body .callout-tip { background:var(--brass-50); border-color:var(--brass-500); color:var(--brass-700); }
+.ep-body .callout-danger { background:var(--rust-dim); border-color:var(--rust); color:#7A1E0E; }
+.ep-body .embed-wrap { border:1px solid var(--hairline); border-radius:8px; overflow:hidden; margin:18px 0; background:#000; aspect-ratio:16/9; }
+.ep-body .embed-wrap iframe { width:100%; height:100%; border:none; display:block; }
+.ep-body .audio-block { border:1px solid var(--hairline); border-radius:8px; padding:14px; margin:18px 0; display:flex; flex-direction:column; gap:8px; }
+.ep-body .audio-block audio { width:100%; }
+.ep-body .audio-block .audio-title { font-size:13px; font-weight:600; color:var(--ink); }
+.ep-body .columns-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:18px 0; }
+.ep-body .columns-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin:18px 0; }
+.ep-body .drop-cap > p:first-child::first-letter { font-family:'Fraunces',serif; font-size:4.5em; font-weight:600; float:left; line-height:0.75; margin:4px 8px 0 0; color:var(--ink); }
+.ep-body .abstract { background:var(--paper-dim); border-radius:8px; padding:16px 18px; margin:0 0 24px; font-style:italic; font-size:16px; color:var(--ink-soft); border-left:3px solid var(--hairline); }
+.ep-body mark { background:rgba(168,118,46,0.22); padding:0 2px; border-radius:2px; }
+.ep-body .social-card { border:1px solid var(--hairline); border-radius:10px; padding:16px; margin:18px 0; font-size:13.5px; }
+.ep-body .social-card .sc-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:600; }
+.ep-body .social-card .sc-platform { font-size:11px; color:var(--ink-faint); }
+.ep-body .sc-x { border-left:3px solid #000; }
+.ep-body .sc-instagram { border-left:3px solid #E1306C; }
+.ep-body .sc-facebook { border-left:3px solid #1877F2; }
+.ep-body .sc-spotify { border-left:3px solid #1DB954; }
+.ep-body .sc-soundcloud { border-left:3px solid #FF5500; }
+.ep-body .footnote-ref { font-size:0.75em; vertical-align:super; color:var(--brass-600); text-decoration:none; font-weight:600; }
+.ep-body .footnotes-section { border-top:1px solid var(--hairline); margin-top:32px; padding-top:16px; font-size:14px; color:var(--ink-faint); }
+
+/* Right sidebar */
+.ep-right {
+  width:300px; flex-shrink:0; border-left:1px solid var(--hairline);
+  background:rgba(243,239,231,0.25); overflow-y:auto;
+  transition:width 0.2s, opacity 0.2s;
+}
+.ep-right.collapsed { width:0; opacity:0; overflow:hidden; }
+.ep-right-inner { padding:14px; }
+.ep-right-inner h4 { font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-faint); margin:0 0 8px; }
+.ep-section { margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--hairline); }
+.ep-section:last-child { border-bottom:none; }
+
+/* Bottom bar */
+.ep-bottombar {
+  display:flex; align-items:center; gap:10px; padding:10px 16px;
+  border-top:1px solid var(--hairline); background:rgba(250,248,244,0.97);
+  backdrop-filter:blur(6px); flex-shrink:0; flex-wrap:wrap;
+  padding-bottom:max(10px, env(safe-area-inset-bottom));
+}
+.ep-stat { font-size:11.5px; color:var(--ink-faint); white-space:nowrap; }
+.ep-stat strong { color:var(--ink-soft); }
+.ep-autosave { font-size:11.5px; color:var(--ink-faint); }
+.ep-autosave.saved { color:var(--sage); }
+.ep-autosave.dirty { color:var(--brass-600); }
+
+/* Drone rule sync */
+.ep-drone { flex:1; height:1px; background:var(--hairline); position:relative; overflow:hidden; min-width:40px; }
+.ep-drone.active::after { content:''; position:absolute; inset:0; background:var(--brass-500); animation:drone 1.2s ease-in-out infinite; }
+
+/* Find & replace bar */
+.ep-find-bar {
+  display:none; align-items:center; gap:8px; padding:8px 14px;
+  border-bottom:1px solid var(--hairline); background:var(--paper-dim); flex-shrink:0;
+}
+.ep-find-bar.show { display:flex; flex-wrap:wrap; }
+.ep-find-bar input { font-size:13px; padding:6px 10px; }
+.ep-find-bar .ep-find-count { font-size:12px; color:var(--ink-faint); white-space:nowrap; }
+
+/* Modals */
+.ep-modal-overlay {
+  position:fixed; inset:0; background:rgba(18,17,15,0.5); z-index:200;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.ep-modal {
+  background:var(--paper); border-radius:12px; padding:22px; max-width:480px; width:100%;
+  max-height:85vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.25);
+}
+.ep-modal h3 { font-size:18px; margin:0 0 14px; }
+.ep-modal-actions { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+
+/* Outline items */
+.outline-item { display:flex; align-items:center; gap:6px; padding:5px 6px; border-radius:6px; cursor:pointer; font-size:13px; color:var(--ink-soft); background:none; border:none; width:100%; text-align:left; }
+.outline-item:hover { background:var(--paper-dim); }
+.outline-item.h1 { font-weight:600; }
+.outline-item.h2 { padding-left:14px; }
+.outline-item.h3 { padding-left:24px; font-size:12px; }
+.outline-item.h4 { padding-left:32px; font-size:11.5px; color:var(--ink-faint); }
+
+/* Snippet/template cards */
+.snippet-card { border:1px solid var(--hairline); border-radius:8px; padding:10px; margin-bottom:8px; cursor:pointer; }
+.snippet-card:hover { border-color:var(--brass-300); background:var(--brass-50); }
+.snippet-card .sn-title { font-size:13px; font-weight:600; }
+.snippet-card .sn-preview { font-size:11.5px; color:var(--ink-faint); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* Revision items */
+.rev-item { padding:9px 0; border-top:1px solid var(--hairline); display:flex; align-items:start; gap:10px; }
+.rev-item:first-child { border-top:none; }
+
+/* Color picker row */
+.color-swatches { display:flex; gap:6px; flex-wrap:wrap; }
+.swatch-pick { width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:border-color 0.15s; }
+.swatch-pick:hover, .swatch-pick.on { border-color:var(--ink); }
+
+/* Typewriter mode */
+body.typewriter-mode .ep-body { padding-top:40vh !important; padding-bottom:40vh !important; }
+body.typewriter-mode .ep-body * { transition:opacity 0.3s; }
+
+/* Focus mode */
+body.ep-focus .ep-left, body.ep-focus .ep-right, body.ep-focus .ep-topbar .tb-sep,
+body.ep-focus #focusHide { display:none !important; }
+body.ep-focus .ep-topbar { justify-content:center; }
+
+/* Dark editor theme */
+body.ep-dark .ep-canvas, body.ep-dark .ep-body, body.ep-dark .ep-title-area,
+body.ep-dark .ep-meta-row { background:#15140F; }
+body.ep-dark .ep-body { color:#C9C5BC; }
+body.ep-dark .ep-title { color:#E8E3DA; }
+
+/* Split preview */
+.ep-split { display:flex; flex:1; min-height:0; }
+.ep-split .ep-canvas { flex:1; border-right:1px solid var(--hairline); }
+.ep-split-preview { flex:1; overflow-y:auto; padding:24px 40px; font-size:17px; line-height:1.8; color:var(--ink-soft); }
+.ep-split-preview h1,h2,h3 { font-family:'Fraunces',serif; color:var(--ink); }
+
+/* Responsive */
+@media (max-width:960px) {
+  .ep-left { display:none; }
+  .ep-left.mob-show { display:flex; position:fixed; left:0; top:0; bottom:0; z-index:60; width:80vw; max-width:280px; box-shadow:4px 0 16px rgba(0,0,0,0.15); }
+  .ep-right { width:100%; max-width:100%; position:fixed; bottom:0; left:0; right:0; height:auto; max-height:60vh; border-left:none; border-top:1px solid var(--hairline); display:none; z-index:60; }
+  .ep-right.mob-show { display:block; }
+  .ep-title-area, .ep-meta-row, .ep-body { padding-left:18px; padding-right:18px; }
+}
+@media (max-width:640px) {
+  .ep-body { font-size:16px; padding-bottom:160px; }
+  .ep-title { font-size:24px; }
+  .ep-body .columns-2, .ep-body .columns-3 { grid-template-columns:1fr; }
+  .ep-body .img-float-left, .ep-body .img-float-right { float:none; width:100%; margin:12px 0; }
+}
+</style>
+</head>
+<body>
+<div id="app-shell"></div>
+
+<script src="../assets/js/github.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/markdown.js"></script>
+<script src="../assets/js/util.js"></script>
+<script src="../assets/js/shell.js"></script>
+<script src="../assets/js/articles.js"></script>
+<script src="../assets/js/media.js"></script>
+<script>
+const session = Shell.mount('');
+if (!session) throw new Error('Not authenticated');
+
+const { account, target } = session;
+const root = Shell.pageRoot();
+root.style.cssText = 'padding:0;height:100%;overflow:hidden;display:flex;flex-direction:column;';
+
+const params = new URLSearchParams(location.search);
+const existingPath = params.get('path');
+
+// ─── State ────────────────────────────────────────────────────
+let frontmatter = window.MD.DEFAULT_FRONTMATTER();
+let slugTouched = false;
+let currentPath = existingPath;
+let currentSha = null;
+let saveState = 'idle'; // idle | saving | saved | error
+let isDirty = false;
+let autosaveKey = 'ep-autosave-' + (existingPath || 'new');
+let findMatches = [];
+let findIndex = 0;
+let footnoteCount = 0;
+let snippets = JSON.parse(localStorage.getItem('ep-snippets') || '[]');
+let leftTab = 'outline';
+let splitMode = false;
+let showFind = false;
+
+// ─── Build DOM ────────────────────────────────────────────────
+root.innerHTML = `
+<div class="ep-shell">
+
+  <!-- Top toolbar -->
+  <div class="ep-topbar" id="epToolbar">
+    <!-- Left panel toggle -->
+    <button class="tb" id="tbLeftToggle" title="Toggle outline panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><path d="M14 8h7M14 12h7M14 16h5"/></svg></button>
+    <div class="tb-sep" id="focusHide"></div>
+
+    <!-- History -->
+    <button class="tb" id="tbUndo" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M3 13A9 9 0 1 0 6 6.3L3 7"/></svg></button>
+    <button class="tb" id="tbRedo" title="Redo (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M21 13A9 9 0 1 1 18 6.3L21 7"/></svg></button>
+    <div class="tb-sep"></div>
+
+    <!-- Block type dropdown -->
+    <div style="position:relative">
+      <button class="tb" id="tbBlockDrop" title="Block type" style="gap:3px;padding:5px 8px;">
+        <span class="tb-label" id="blockLabel">¶</span>
+        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="tb-drop" id="blockDropMenu" style="display:none;width:190px;">
+        ${[
+          ['p','Paragraph','¶'],['h1','Heading 1','H1'],['h2','Heading 2','H2'],
+          ['h3','Heading 3','H3'],['h4','Heading 4','H4'],
+          ['blockquote','Quote','❝'],['pre','Code block','</>'],
+          ['pullquote','Pull quote','❛❜'],['abstract','Abstract','Ab'],
+        ].map(([v,l,ic])=>`<button class="tb-drop-item" data-block="${v}"><span style="width:22px;text-align:center;font-size:12px;font-weight:600;">${ic}</span>${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="tb-sep"></div>
+
+    <!-- Inline formatting -->
+    <button class="tb" id="tbBold" title="Bold (Ctrl+B)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h8a4 4 0 0 1 0 8H6V4Zm0 8h9a4 4 0 0 1 0 8H6v-8Z"/></svg></button>
+    <button class="tb" id="tbItalic" title="Italic (Ctrl+I)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 4h-9M14 20H5M15 4 9 20"/></svg></button>
+    <button class="tb" id="tbUnder" title="Underline (Ctrl+U)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v6a6 6 0 0 0 12 0V4M4 20h16"/></svg></button>
+    <button class="tb" id="tbStrike" title="Strikethrough"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M8 6a4 4 0 0 1 7.5 0M8 18a4 4 0 0 0 7.5 0"/></svg></button>
+    <button class="tb" id="tbCode" title="Inline code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg></button>
+    <button class="tb" id="tbHighlight" title="Highlight"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11-6 6v3h3l6-6M22 5l-3-3-9 9 3 3z"/></svg></button>
+    <button class="tb" id="tbSup" title="Superscript"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 19 8-8m-8 0 8 8M20 12h-4l4-6h-4"/></svg></button>
+    <button class="tb" id="tbSub" title="Subscript"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 5 8 8M4 13l8-8m8 15h-4l4-6h-4"/></svg></button>
+    <button class="tb" id="tbClearFmt" title="Clear formatting" class="danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3.27 6.96 16.15-2.58M15.77 15.77l.44 2.7-11-1.73L3 9.18l6.62-1.06"/></svg></button>
+    <div class="tb-sep"></div>
+
+    <!-- Link / image / media -->
+    <button class="tb" id="tbLink" title="Insert link (Ctrl+K)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17H7A5 5 0 0 1 7 7h2m6 10h2a5 5 0 0 0 0-10h-2M8 12h8"/></svg></button>
+    <button class="tb" id="tbUnlink" title="Remove link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18.84 12.25 1.72-1.71a4.99 4.99 0 1 0-7.07-7.07l-1.72 1.71M5.17 11.75l-1.72 1.71a5 5 0 0 0 7.07 7.07l1.72-1.71M8 16l8-8"/></svg></button>
+    <button class="tb" id="tbImageUpload" title="Upload image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></button>
+    <button class="tb" id="tbImageUrl" title="Image from URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+    <button class="tb" id="tbAudio" title="Insert audio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></button>
+    <div class="tb-sep"></div>
+
+    <!-- Embeds dropdown -->
+    <div style="position:relative">
+      <button class="tb" id="tbEmbedDrop" title="Embed" style="gap:3px;padding:5px 8px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="m8 12 4-4 4 4M12 8v8"/></svg>
+        <span class="tb-label">Embed</span>
+        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="tb-drop" id="embedDropMenu" style="display:none;width:200px;">
+        ${[
+          ['yt','YouTube Video'],['vimeo','Vimeo Video'],['insta','Instagram Post'],
+          ['fb','Facebook Video'],['tweet','Tweet / X Post'],['spotify','Spotify Track/Album'],
+          ['soundcloud','SoundCloud Track'],['gist','GitHub Gist'],
+          ['maps','Google Maps'],['social-card','Social mention card'],
+        ].map(([v,l])=>`<button class="tb-drop-item" data-embed="${v}">${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="tb-sep"></div>
+
+    <!-- Lists & structure -->
+    <button class="tb" id="tbUL" title="Bullet list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/><path d="M9 6h11M9 12h11M9 18h11"/></svg></button>
+    <button class="tb" id="tbOL" title="Numbered list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h1v4M4 14h2l-2 2.5h2M9 6h11M9 12h11M9 18h11"/></svg></button>
+    <button class="tb" id="tbChecklist" title="Checklist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></button>
+    <button class="tb" id="tbTable" title="Insert table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></button>
+    <button class="tb" id="tbHR" title="Divider"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg></button>
+    <div class="tb-sep"></div>
+
+    <!-- Alignment -->
+    <button class="tb" id="tbAlignL" title="Align left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h12M3 18h15"/></svg></button>
+    <button class="tb" id="tbAlignC" title="Align center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M4.5 18h15"/></svg></button>
+    <button class="tb" id="tbAlignR" title="Align right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M9 12h12M6 18h15"/></svg></button>
+    <button class="tb" id="tbAlignJ" title="Justify"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <div class="tb-sep"></div>
+
+    <!-- Callout dropdown -->
+    <div style="position:relative">
+      <button class="tb" id="tbCalloutDrop" title="Callout block" style="gap:3px;padding:5px 8px;">
+        <span class="tb-label">!</span>
+        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="tb-drop" id="calloutDropMenu" style="display:none;">
+        ${['info','warning','success','tip','danger'].map(t=>`<button class="tb-drop-item" data-callout="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}
+      </div>
+    </div>
+    <div class="tb-sep"></div>
+
+    <!-- Footnote, columns, dropcap -->
+    <button class="tb" id="tbFootnote" title="Insert footnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M12 4v12M12 16l-3-3M12 16l3-3"/></svg></button>
+    <button class="tb" id="tbCol2" title="Two columns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/></svg></button>
+    <button class="tb" id="tbCol3" title="Three columns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="5" height="18" rx="1"/><rect x="9.5" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="5" height="18" rx="1"/></svg></button>
+    <button class="tb" id="tbDropCap" title="Toggle drop cap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h7v16H3z"/><path d="M14 4h7M14 12h7M14 20h5"/></svg></button>
+    <div class="tb-sep"></div>
+
+    <!-- View modes -->
+    <button class="tb" id="tbFind" title="Find & replace (Ctrl+F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
+    <button class="tb" id="tbSplit" title="Split preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18"/></svg></button>
+    <button class="tb" id="tbDark" title="Dark editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg></button>
+    <button class="tb" id="tbTypewriter" title="Typewriter mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 0 0-8 0v2M8 14h8M8 18h5"/></svg></button>
+    <button class="tb" id="tbFocus" title="Focus mode (Ctrl+Shift+F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m11-5v3a2 2 0 0 1-2 2h-3"/></svg></button>
+    <button class="tb" id="tbRevisions" title="Revision history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z"/></svg></button>
+    <button class="tb" id="tbDuplicate" title="Duplicate article"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+    <button class="tb" id="tbShortcuts" title="Keyboard shortcuts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/></svg></button>
+    <div style="margin-left:auto;display:flex;gap:4px;align-items:center;">
+      <button class="tb" id="tbRightToggle" title="Article settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm8 3a8 8 0 0 0-.2-1.8l2-1.6-2-3.4-2.4.9a8 8 0 0 0-3.1-1.8L14 2h-4l-.3 2.3a8 8 0 0 0-3.1 1.8l-2.4-.9-2 3.4 2 1.6A8 8 0 0 0 4 12a8 8 0 0 0 .2 1.8l-2 1.6 2 3.4 2.4-.9a8 8 0 0 0 3.1 1.8L10 22h4l.3-2.3a8 8 0 0 0 3.1-1.8l2.4.9 2-3.4-2-1.6c.1-.6.2-1.2.2-1.8Z"/></svg></button>
+    </div>
+  </div>
+
+  <!-- Find & replace bar -->
+  <div class="ep-find-bar" id="epFindBar">
+    <input class="input" id="findInput" placeholder="Find…" style="width:140px;" />
+    <input class="input" id="replaceInput" placeholder="Replace with…" style="width:140px;" />
+    <button class="btn btn-ghost btn-sm" id="findPrev">↑</button>
+    <button class="btn btn-ghost btn-sm" id="findNext">↓</button>
+    <button class="btn btn-ghost btn-sm" id="replaceOne">Replace</button>
+    <button class="btn btn-ghost btn-sm" id="replaceAll">All</button>
+    <span class="ep-find-count" id="findCount"></span>
+    <button class="btn btn-ghost btn-sm" id="findClose" style="margin-left:auto;">✕</button>
+  </div>
+
+  <!-- Main area -->
+  <div class="ep-main" id="epMain">
+
+    <!-- Left panel -->
+    <div class="ep-left" id="epLeft">
+      <div class="ep-left-inner">
+        <div class="ep-panel-tab">
+          <button class="ep-tab on" data-ltab="outline">Outline</button>
+          <button class="ep-tab" data-ltab="templates">Templates</button>
+          <button class="ep-tab" data-ltab="snippets">Snippets</button>
+        </div>
+        <div id="ltabOutline">
+          <div id="outlineList" style="font-size:13px;color:var(--ink-faint);">Start writing to see headings here.</div>
+        </div>
+        <div id="ltabTemplates" style="display:none;">
+          ${[
+            ['Interview','<h2>About the Artist</h2><p></p><h2>The Conversation</h2><p><strong>Q:</strong> </p><p><strong>A:</strong> </p><h2>Looking Ahead</h2><p></p>'],
+            ['Concert Review','<p class="abstract">One-line summary of the performance.</p><h2>First Half</h2><p></p><h2>Second Half</h2><p></p><h2>Verdict</h2><p></p>'],
+            ['Essay','<p class="abstract">Open with a question or provocation.</p><h2>Section One</h2><p></p><h2>Section Two</h2><p></p><h2>Conclusion</h2><p></p>'],
+            ['Album Review','<h2>Background</h2><p></p><h2>Track by Track</h2><p></p><h2>Production</h2><p></p><h2>Final Thoughts</h2><p></p>'],
+          ].map(([t,h])=>`<div class="snippet-card" data-template="${h.replace(/"/g,'&quot;')}"><div class="sn-title">${t}</div><div class="sn-preview">${t} structure</div></div>`).join('')}
+        </div>
+        <div id="ltabSnippets" style="display:none;">
+          <div id="snippetList"></div>
+          <button class="btn btn-ghost btn-sm btn-block" id="saveSnippetBtn" style="margin-top:8px;">Save selection as snippet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Editor canvas -->
+    <div class="ep-canvas" id="epCanvas">
+      <div class="ep-title-area">
+        <textarea class="ep-title" id="epTitle" placeholder="Article title" rows="1"></textarea>
+      </div>
+      <div class="ep-meta-row">
+        <span id="metaSlug" class="mono">/untitled</span>
+        <span class="sep">·</span>
+        <span id="statWords">0 words</span>
+        <span class="sep">·</span>
+        <span id="statRead">1 min</span>
+        <span class="sep">·</span>
+        <span id="statChars">0 chars</span>
+        <span class="sep">·</span>
+        <span id="statSentences">0 sentences</span>
+        <span class="sep">·</span>
+        <span id="statParas">0 paragraphs</span>
+      </div>
+      <div class="ep-body" id="epBody" contenteditable="true" data-ph="Start writing your article…"></div>
+    </div>
+
+    <!-- Split preview pane (hidden unless split mode) -->
+    <div class="ep-split-preview" id="epSplitPreview" style="display:none;"></div>
+
+    <!-- Right panel -->
+    <div class="ep-right" id="epRight">
+      <div class="ep-right-inner">
+        <div class="ep-section">
+          <h4>Status</h4>
+          <select class="input" id="fmStatus">
+            ${['draft','review','scheduled','published','archived'].map(s=>`<option value="${s}">${s[0].toUpperCase()+s.slice(1)}</option>`).join('')}
+          </select>
+          <div id="scheduleRow" style="display:none;margin-top:8px;">
+            <input type="datetime-local" class="input" id="fmScheduled" />
+          </div>
+        </div>
+        <div class="ep-section">
+          <h4>Slug</h4>
+          <input class="input mono" id="fmSlug" />
+        </div>
+        <div class="ep-section">
+          <h4>Excerpt</h4>
+          <textarea class="input" id="fmExcerpt" rows="3" style="resize:none;" placeholder="Short summary…"></textarea>
+        </div>
+        <div class="ep-section">
+          <h4>Categories</h4>
+          <input class="input" id="fmCategories" placeholder="Tabla, Interviews" />
+        </div>
+        <div class="ep-section">
+          <h4>Tags</h4>
+          <input class="input" id="fmTags" placeholder="raga, live-review" />
+        </div>
+        <div class="ep-section">
+          <h4>Author</h4>
+          <input class="input" id="fmAuthor" placeholder="Author name or ID" />
+        </div>
+        <div class="ep-section">
+          <h4>Flags</h4>
+          <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px;"><input type="checkbox" id="fmFeatured" />Featured</label>
+          <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:6px;"><input type="checkbox" id="fmPinned" />Pinned</label>
+          <label style="display:flex;gap:8px;align-items:center;font-size:13px;"><input type="checkbox" id="fmPassword" />Password protected</label>
+        </div>
+        <details>
+          <summary style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);cursor:pointer;padding:4px 0;margin-bottom:8px;">SEO</summary>
+          <div class="ep-section" style="margin-top:8px;">
+            <input class="input" id="fmMetaDesc" placeholder="Meta description" style="margin-bottom:8px;" />
+            <input class="input" id="fmCanonical" placeholder="Canonical URL" style="margin-bottom:8px;" />
+            <input class="input" id="fmOgImage" placeholder="OG image URL" style="margin-bottom:8px;" />
+            <label style="display:flex;gap:8px;align-items:center;font-size:13px;"><input type="checkbox" id="fmNoindex" />No-index</label>
+          </div>
+        </details>
+        <details>
+          <summary style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);cursor:pointer;padding:4px 0;margin-bottom:8px;">Export / Copy</summary>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+            <button class="btn btn-ghost btn-sm" id="copyHtmlBtn">Copy as HTML</button>
+            <button class="btn btn-ghost btn-sm" id="copyTextBtn">Copy as plain text</button>
+            <button class="btn btn-ghost btn-sm" id="exportMdBtn">Export as .md</button>
+            <button class="btn btn-ghost btn-sm" id="exportTxtBtn">Export as .txt</button>
+            <button class="btn btn-ghost btn-sm" id="exportHtmlBtn">Export as .html</button>
+          </div>
+        </details>
+        <details>
+          <summary style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);cursor:pointer;padding:4px 0;margin-bottom:8px;">Word analysis</summary>
+          <div id="wordAnalysis" style="font-size:12.5px;color:var(--ink-faint);margin-top:8px;">Write something to analyse.</div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="ep-bottombar">
+    <span class="ep-autosave" id="autosaveStatus">Ready</span>
+    <div class="ep-drone" id="epDrone"></div>
+    <span class="ep-stat" id="statWordsFoot"></span>
+    <button class="btn btn-primary" id="commitBtn" style="flex-shrink:0;">
+      Commit to GitHub
+    </button>
+  </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="imgFileInput" accept="image/*" style="display:none;" />
+<input type="file" id="audioFileInput" accept="audio/*" style="display:none;" />
+`;
+
+// ─── Refs ──────────────────────────────────────────────────────
+const epBody = document.getElementById('epBody');
+const epTitle = document.getElementById('epTitle');
+
+// ─── Utility helpers ──────────────────────────────────────────
+function cmd(command, value) {
+  epBody.focus();
+  document.execCommand(command, false, value || null);
+  markDirty();
+  updateStats();
+}
+
+function insertHTML(html) {
+  epBody.focus();
+  document.execCommand('insertHTML', false, html);
+  markDirty();
+  updateStats();
+  updateOutline();
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function markDirty() {
+  isDirty = true;
+  document.getElementById('autosaveStatus').textContent = 'Unsaved changes';
+  document.getElementById('autosaveStatus').className = 'ep-autosave dirty';
+}
+
+// ─── Stats ────────────────────────────────────────────────────
+function updateStats() {
+  const text = epBody.innerText || '';
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const chars = text.replace(/\s/g,'').length;
+  const sentences = text.split(/[.!?]+/).filter(s=>s.trim().length).length;
+  const paras = text.split(/\n{2,}/).filter(Boolean).length;
+  const readMin = Math.max(1, Math.round(words/200));
+  document.getElementById('statWords').textContent = `${words} words`;
+  document.getElementById('statRead').textContent = `${readMin} min read`;
+  document.getElementById('statChars').textContent = `${chars} chars`;
+  document.getElementById('statSentences').textContent = `${sentences} sentences`;
+  document.getElementById('statParas').textContent = `${paras || 1} paragraphs`;
+  document.getElementById('statWordsFoot').innerHTML = `<strong>${words}</strong> words · <strong>${readMin}</strong> min`;
+  if (splitMode) updateSplitPreview();
+}
+
+// ─── Outline ──────────────────────────────────────────────────
+function updateOutline() {
+  const heads = epBody.querySelectorAll('h1,h2,h3,h4');
+  const list = document.getElementById('outlineList');
+  if (!heads.length) { list.textContent = 'Start writing to see headings here.'; return; }
+  list.innerHTML = Array.from(heads).map((h,i) => {
+    const tag = h.tagName.toLowerCase();
+    return `<button class="outline-item ${tag}" data-idx="${i}">${h.textContent || '(empty heading)'}</button>`;
+  }).join('');
+  list.querySelectorAll('.outline-item').forEach((btn,i) => {
+    btn.addEventListener('click', () => heads[i].scrollIntoView({ behavior:'smooth', block:'start' }));
+  });
+}
+
+// ─── Frontmatter sync ────────────────────────────────────────
+function readFrontmatter() {
+  frontmatter.title = epTitle.value;
+  frontmatter.slug = document.getElementById('fmSlug').value;
+  frontmatter.status = document.getElementById('fmStatus').value;
+  frontmatter.excerpt = document.getElementById('fmExcerpt').value;
+  frontmatter.categories = document.getElementById('fmCategories').value.split(',').map(s=>s.trim()).filter(Boolean);
+  frontmatter.tags = document.getElementById('fmTags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  frontmatter.authorId = document.getElementById('fmAuthor').value;
+  frontmatter.featured = document.getElementById('fmFeatured').checked;
+  frontmatter.pinned = document.getElementById('fmPinned').checked;
+  frontmatter.passwordProtected = document.getElementById('fmPassword').checked;
+  if (frontmatter.status === 'scheduled') {
+    const v = document.getElementById('fmScheduled').value;
+    frontmatter.scheduledFor = v ? new Date(v).toISOString() : '';
+  }
+  frontmatter.seo = {
+    metaDescription: document.getElementById('fmMetaDesc').value,
+    canonicalUrl: document.getElementById('fmCanonical').value,
+    ogImage: document.getElementById('fmOgImage').value,
+    noindex: document.getElementById('fmNoindex').checked,
+  };
+}
+
+function writeFrontmatter() {
+  epTitle.value = frontmatter.title || '';
+  autoGrow(epTitle);
+  document.getElementById('fmSlug').value = frontmatter.slug || '';
+  document.getElementById('fmStatus').value = frontmatter.status || 'draft';
+  document.getElementById('scheduleRow').style.display = frontmatter.status === 'scheduled' ? 'block' : 'none';
+  if (frontmatter.scheduledFor) document.getElementById('fmScheduled').value = frontmatter.scheduledFor.slice(0,16);
+  document.getElementById('fmExcerpt').value = frontmatter.excerpt || '';
+  document.getElementById('fmCategories').value = (frontmatter.categories||[]).join(', ');
+  document.getElementById('fmTags').value = (frontmatter.tags||[]).join(', ');
+  document.getElementById('fmAuthor').value = frontmatter.authorId || '';
+  document.getElementById('fmFeatured').checked = !!frontmatter.featured;
+  document.getElementById('fmPinned').checked = !!frontmatter.pinned;
+  document.getElementById('fmPassword').checked = !!frontmatter.passwordProtected;
+  if (frontmatter.seo) {
+    document.getElementById('fmMetaDesc').value = frontmatter.seo.metaDescription || '';
+    document.getElementById('fmCanonical').value = frontmatter.seo.canonicalUrl || '';
+    document.getElementById('fmOgImage').value = frontmatter.seo.ogImage || '';
+    document.getElementById('fmNoindex').checked = !!frontmatter.seo.noindex;
+  }
+  updateSlugDisplay();
+}
+
+function updateSlugDisplay() {
+  document.getElementById('metaSlug').textContent = '/' + (frontmatter.slug || 'untitled');
+}
+
+// ─── Title / slug binding ─────────────────────────────────────
+epTitle.addEventListener('input', () => {
+  autoGrow(epTitle);
+  frontmatter.title = epTitle.value;
+  if (!slugTouched) {
+    frontmatter.slug = window.MD.slugify(epTitle.value);
+    document.getElementById('fmSlug').value = frontmatter.slug;
+    updateSlugDisplay();
+  }
+  markDirty();
+});
+document.getElementById('fmSlug').addEventListener('input', e => {
+  slugTouched = true;
+  frontmatter.slug = window.MD.slugify(e.target.value);
+  e.target.value = frontmatter.slug;
+  updateSlugDisplay();
+});
+document.getElementById('fmStatus').addEventListener('change', e => {
+  document.getElementById('scheduleRow').style.display = e.target.value === 'scheduled' ? 'block' : 'none';
+});
+
+// ─── Editor content events ────────────────────────────────────
+epBody.addEventListener('input', () => { markDirty(); updateStats(); updateOutline(); });
+epBody.addEventListener('keydown', handleEditorKey);
+
+// Auto-grow title
+window.addEventListener('load', () => autoGrow(epTitle));
+
+// ─── Toolbar button bindings ──────────────────────────────────
+// Undo / redo
+document.getElementById('tbUndo').addEventListener('click', () => cmd('undo'));
+document.getElementById('tbRedo').addEventListener('click', () => cmd('redo'));
+
+// Inline formatting
+document.getElementById('tbBold').addEventListener('click', () => cmd('bold'));
+document.getElementById('tbItalic').addEventListener('click', () => cmd('italic'));
+document.getElementById('tbUnder').addEventListener('click', () => cmd('underline'));
+document.getElementById('tbStrike').addEventListener('click', () => cmd('strikeThrough'));
+document.getElementById('tbCode').addEventListener('click', () => {
+  const sel = window.getSelection();
+  const text = sel.toString();
+  if (text) insertHTML(`<code>${escapeHtml(text)}</code>`);
+  else insertHTML('<code>code</code>');
+});
+document.getElementById('tbHighlight').addEventListener('click', () => {
+  const sel = window.getSelection();
+  const text = sel.toString();
+  if (text) insertHTML(`<mark>${escapeHtml(text)}</mark>`);
+  else insertHTML('<mark>highlight</mark>');
+});
+document.getElementById('tbSup').addEventListener('click', () => cmd('superscript'));
+document.getElementById('tbSub').addEventListener('click', () => cmd('subscript'));
+document.getElementById('tbClearFmt').addEventListener('click', () => cmd('removeFormat'));
+
+// Alignment
+document.getElementById('tbAlignL').addEventListener('click', () => cmd('justifyLeft'));
+document.getElementById('tbAlignC').addEventListener('click', () => cmd('justifyCenter'));
+document.getElementById('tbAlignR').addEventListener('click', () => cmd('justifyRight'));
+document.getElementById('tbAlignJ').addEventListener('click', () => cmd('justifyFull'));
+
+// Lists
+document.getElementById('tbUL').addEventListener('click', () => cmd('insertUnorderedList'));
+document.getElementById('tbOL').addEventListener('click', () => cmd('insertOrderedList'));
+document.getElementById('tbHR').addEventListener('click', () => cmd('insertHorizontalRule'));
+document.getElementById('tbChecklist').addEventListener('click', () => {
+  insertHTML('<ul data-checklist="1"><li><input type="checkbox"> </li></ul><p><br></p>');
+});
+document.getElementById('tbTable').addEventListener('click', () => {
+  insertHTML(`<table><tr><th>Header</th><th>Header</th><th>Header</th></tr><tr><td>Cell</td><td>Cell</td><td>Cell</td></tr><tr><td>Cell</td><td>Cell</td><td>Cell</td></tr></table><p><br></p>`);
+});
+
+// Link
+document.getElementById('tbLink').addEventListener('click', () => {
+  const url = prompt('Link URL:');
+  if (url) cmd('createLink', url);
+});
+document.getElementById('tbUnlink').addEventListener('click', () => cmd('unlink'));
+
+// Columns / dropcap / footnote
+document.getElementById('tbCol2').addEventListener('click', () => {
+  insertHTML('<div class="columns-2"><div><p>Column one content here.</p></div><div><p>Column two content here.</p></div></div><p><br></p>');
+});
+document.getElementById('tbCol3').addEventListener('click', () => {
+  insertHTML('<div class="columns-3"><div><p>One</p></div><div><p>Two</p></div><div><p>Three</p></div></div><p><br></p>');
+});
+document.getElementById('tbDropCap').addEventListener('click', () => {
+  const sel = window.getSelection();
+  const node = sel.anchorNode ? sel.anchorNode.parentElement : null;
+  const div = node ? node.closest('div.drop-cap') || node.closest('[class]') : null;
+  insertHTML('<div class="drop-cap"><p>Lead paragraph with a large drop cap on the first letter of this sentence.</p></div><p><br></p>');
+});
+document.getElementById('tbFootnote').addEventListener('click', () => {
+  footnoteCount++;
+  const n = footnoteCount;
+  insertHTML(`<sup><a class="footnote-ref" href="#fn-${n}" id="fnref-${n}">[${n}]</a></sup>`);
+  epBody.innerHTML += `<div class="footnotes-section" id="fn-${n}"><strong>${n}.</strong> <em>Footnote text here. <a href="#fnref-${n}">↩</a></em></div>`;
+});
+
+// Block type dropdown
+const blockDropMenu = document.getElementById('blockDropMenu');
+document.getElementById('tbBlockDrop').addEventListener('click', (e) => {
+  e.stopPropagation();
+  blockDropMenu.style.display = blockDropMenu.style.display === 'none' ? 'block' : 'none';
+});
+blockDropMenu.querySelectorAll('[data-block]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const v = btn.dataset.block;
+    blockDropMenu.style.display = 'none';
+    if (v === 'pullquote') {
+      insertHTML('<div class="pullquote"><p>Pull quote text here.</p></div><p><br></p>');
+    } else if (v === 'abstract') {
+      insertHTML('<p class="abstract">Abstract or introduction text here.</p>');
+    } else {
+      cmd('formatBlock', v === 'p' ? 'P' : v.toUpperCase());
+    }
+    document.getElementById('blockLabel').textContent = { p:'¶',h1:'H1',h2:'H2',h3:'H3',h4:'H4',blockquote:'❝',pre:'</>',pullquote:'❛❜',abstract:'Ab' }[v] || '¶';
+  });
+});
+
+// Callout dropdown
+const calloutDropMenu = document.getElementById('calloutDropMenu');
+document.getElementById('tbCalloutDrop').addEventListener('click', (e) => {
+  e.stopPropagation();
+  calloutDropMenu.style.display = calloutDropMenu.style.display === 'none' ? 'block' : 'none';
+});
+calloutDropMenu.querySelectorAll('[data-callout]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    calloutDropMenu.style.display = 'none';
+    const t = btn.dataset.callout;
+    const icons = { info:'ℹ️', warning:'⚠️', success:'✅', tip:'💡', danger:'🚨' };
+    insertHTML(`<div class="callout callout-${t}"><strong>${icons[t]} ${t[0].toUpperCase()+t.slice(1)}:</strong> Your callout text here.</div><p><br></p>`);
+  });
+});
+
+// Embed dropdown
+const embedDropMenu = document.getElementById('embedDropMenu');
+document.getElementById('tbEmbedDrop').addEventListener('click', (e) => {
+  e.stopPropagation();
+  embedDropMenu.style.display = embedDropMenu.style.display === 'none' ? 'block' : 'none';
+});
+embedDropMenu.querySelectorAll('[data-embed]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    embedDropMenu.style.display = 'none';
+    handleEmbed(btn.dataset.embed);
+  });
+});
+
+function handleEmbed(type) {
+  if (type === 'yt') {
+    const url = prompt('YouTube URL or video ID:');
+    if (!url) return;
+    let id = url;
+    const m = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    if (m) id = m[1];
+    insertHTML(`<div class="embed-wrap"><iframe src="https://www.youtube.com/embed/${id}" allowfullscreen loading="lazy"></iframe></div><p><br></p>`);
+  } else if (type === 'vimeo') {
+    const url = prompt('Vimeo URL or video ID:');
+    if (!url) return;
+    const id = url.replace(/.*\//, '');
+    insertHTML(`<div class="embed-wrap"><iframe src="https://player.vimeo.com/video/${id}" allowfullscreen loading="lazy"></iframe></div><p><br></p>`);
+  } else if (type === 'insta') {
+    const url = prompt('Instagram post URL:');
+    if (!url) return;
+    insertHTML(`<div class="social-card sc-instagram"><div class="sc-header"><span>📸</span><span>${escapeHtml(url)}</span></div><p class="sc-platform">Instagram</p><p>Instagram embeds require client-side JS — paste the full URL here as a placeholder; add Instagram's embed.js to your public template to render it live.</p><a href="${escapeHtml(url)}" target="_blank" rel="noreferrer" style="font-size:12px;color:#E1306C;">View on Instagram ↗</a></div><p><br></p>`);
+  } else if (type === 'fb') {
+    const url = prompt('Facebook video URL:');
+    if (!url) return;
+    const enc = encodeURIComponent(url);
+    insertHTML(`<div class="embed-wrap"><iframe src="https://www.facebook.com/plugins/video.php?href=${enc}&show_text=false&width=734" allowfullscreen loading="lazy"></iframe></div><p><br></p>`);
+  } else if (type === 'tweet') {
+    const url = prompt('Tweet / X post URL:');
+    if (!url) return;
+    insertHTML(`<div class="social-card sc-x"><div class="sc-header"><span>𝕏</span><span class="sc-platform">Twitter / X</span></div><p>${escapeHtml(url)}</p><a href="${escapeHtml(url)}" target="_blank" rel="noreferrer" style="font-size:12px;">View post ↗</a></div><p><br></p>`);
+  } else if (type === 'spotify') {
+    const url = prompt('Spotify track or album URL:');
+    if (!url) return;
+    const path = url.replace('https://open.spotify.com', '');
+    insertHTML(`<div class="embed-wrap" style="aspect-ratio:auto;height:152px;"><iframe src="https://open.spotify.com/embed${path}" allow="autoplay;clipboard-write;encrypted-media;fullscreen;picture-in-picture" loading="lazy" style="border-radius:8px;"></iframe></div><p><br></p>`);
+  } else if (type === 'soundcloud') {
+    const url = prompt('SoundCloud track URL:');
+    if (!url) return;
+    const enc = encodeURIComponent(url);
+    insertHTML(`<div class="embed-wrap" style="aspect-ratio:auto;height:166px;"><iframe src="https://w.soundcloud.com/player/?url=${enc}&color=%23A8762E&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false" loading="lazy"></iframe></div><p><br></p>`);
+  } else if (type === 'gist') {
+    const url = prompt('GitHub Gist URL:');
+    if (!url) return;
+    const id = url.split('/').pop();
+    insertHTML(`<div style="border:1px solid var(--hairline);border-radius:8px;overflow:hidden;margin:18px 0;"><script src="https://gist.github.com/${id}.js"><\/script></div><p><br></p>`);
+  } else if (type === 'maps') {
+    const query = prompt('Google Maps location (address or place name):');
+    if (!query) return;
+    const enc = encodeURIComponent(query);
+    insertHTML(`<div class="embed-wrap"><iframe src="https://maps.google.com/maps?q=${enc}&output=embed" loading="lazy"></iframe></div><p><br></p>`);
+  } else if (type === 'social-card') {
+    const platform = prompt('Platform (Twitter, Instagram, Facebook):') || 'Twitter';
+    const handle = prompt('@handle or name:') || '@user';
+    const text = prompt('Quote or caption:') || '';
+    insertHTML(`<div class="social-card"><div class="sc-header"><span>${escapeHtml(handle)}</span><span class="sc-platform">${escapeHtml(platform)}</span></div><p>${escapeHtml(text)}</p></div><p><br></p>`);
+  }
+}
+
+// Image upload
+document.getElementById('tbImageUpload').addEventListener('click', () => document.getElementById('imgFileInput').click());
+document.getElementById('imgFileInput').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  toast('Uploading image…');
+  try {
+    const result = await Media.upload(account.token, target.owner, target.repo, target.branch, file);
+    insertHTML(`<figure><img class="img-full" src="${result.url}" alt="${escapeHtml(file.name)}" /><figcaption>${escapeHtml(file.name)}</figcaption></figure><p><br></p>`);
+    toast('Image inserted');
+  } catch(err) { toast(err.message || 'Upload failed', 'error'); }
+  finally { e.target.value = ''; }
+});
+
+// Image from URL
+document.getElementById('tbImageUrl').addEventListener('click', () => {
+  const url = prompt('Image URL (https://...):');
+  if (!url) return;
+  const alt = prompt('Alt text (describe the image for accessibility):') || '';
+  const caption = prompt('Caption (leave blank to skip):') || '';
+  if (caption) {
+    insertHTML(`<figure><img class="img-full" src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" /><figcaption>${escapeHtml(caption)}</figcaption></figure><p><br></p>`);
+  } else {
+    insertHTML(`<img class="img-full" src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" />`);
+  }
+});
+
+// Audio
+document.getElementById('tbAudio').addEventListener('click', () => {
+  const choice = confirm('Upload an audio file?\nOK = Upload file, Cancel = Enter URL');
+  if (choice) {
+    document.getElementById('audioFileInput').click();
+  } else {
+    const url = prompt('Audio URL (mp3, ogg, wav):');
+    if (!url) return;
+    const title = prompt('Track title:') || 'Audio';
+    insertHTML(`<div class="audio-block"><div class="audio-title">${escapeHtml(title)}</div><audio controls src="${escapeHtml(url)}"></audio></div><p><br></p>`);
+  }
+});
+document.getElementById('audioFileInput').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  toast('Uploading audio…');
+  try {
+    const result = await Media.upload(account.token, target.owner, target.repo, target.branch, file);
+    const title = file.name.replace(/\.[^.]+$/, '');
+    insertHTML(`<div class="audio-block"><div class="audio-title">${escapeHtml(title)}</div><audio controls src="${result.url}"></audio></div><p><br></p>`);
+    toast('Audio inserted');
+  } catch(err) { toast(err.message || 'Upload failed', 'error'); }
+  finally { e.target.value = ''; }
+});
+
+// Left panel toggle
+document.getElementById('tbLeftToggle').addEventListener('click', () => {
+  const left = document.getElementById('epLeft');
+  if (window.innerWidth <= 960) {
+    left.classList.toggle('mob-show');
+  } else {
+    left.classList.toggle('collapsed');
+  }
+});
+
+// Right panel toggle
+document.getElementById('tbRightToggle').addEventListener('click', () => {
+  const right = document.getElementById('epRight');
+  if (window.innerWidth <= 960) {
+    right.classList.toggle('mob-show');
+  } else {
+    right.classList.toggle('collapsed');
+  }
+});
+
+// Left panel tabs
+document.querySelectorAll('.ep-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const key = tab.dataset.ltab;
+    document.querySelectorAll('.ep-tab').forEach(t => t.classList.toggle('on', t === tab));
+    ['outline','templates','snippets'].forEach(k => {
+      document.getElementById('ltab' + k[0].toUpperCase() + k.slice(1)).style.display = k === key ? 'block' : 'none';
+    });
+  });
+});
+
+// Templates
+document.querySelectorAll('[data-template]').forEach(card => {
+  card.addEventListener('click', () => {
+    if (!confirm('Insert this template? It will replace the current editor content.')) return;
+    epBody.innerHTML = card.dataset.template;
+    updateStats(); updateOutline(); markDirty();
+  });
+});
+
+// Snippets
+function renderSnippets() {
+  const list = document.getElementById('snippetList');
+  if (!snippets.length) { list.innerHTML = '<p style="font-size:12.5px;color:var(--ink-faint);">Select text, then click Save to store a snippet.</p>'; return; }
+  list.innerHTML = snippets.map((s,i) => `
+    <div class="snippet-card" style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
+      <div data-insert-snippet="${i}" style="flex:1;">
+        <div class="sn-title">${escapeHtml(s.title)}</div>
+        <div class="sn-preview">${escapeHtml(s.preview)}</div>
+      </div>
+      <button data-del-snippet="${i}" style="background:none;border:none;cursor:pointer;color:var(--ink-faint);font-size:14px;flex-shrink:0;" title="Delete">✕</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-insert-snippet]').forEach(el => {
+    el.addEventListener('click', () => { insertHTML(snippets[+el.dataset.insertSnippet].html); });
+  });
+  list.querySelectorAll('[data-del-snippet]').forEach(el => {
+    el.addEventListener('click', () => { snippets.splice(+el.dataset.delSnippet, 1); localStorage.setItem('ep-snippets', JSON.stringify(snippets)); renderSnippets(); });
+  });
+}
+renderSnippets();
+document.getElementById('saveSnippetBtn').addEventListener('click', () => {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || !sel.toString().trim()) { toast('Select some text first', 'error'); return; }
+  const range = sel.getRangeAt(0);
+  const div = document.createElement('div');
+  div.appendChild(range.cloneContents());
+  const title = prompt('Name for this snippet:', sel.toString().slice(0,40));
+  if (!title) return;
+  snippets.push({ title, html: div.innerHTML, preview: sel.toString().slice(0,60) });
+  localStorage.setItem('ep-snippets', JSON.stringify(snippets));
+  renderSnippets();
+  toast('Snippet saved');
+});
+
+// ─── Find & Replace ───────────────────────────────────────────
+document.getElementById('tbFind').addEventListener('click', toggleFind);
+document.getElementById('findClose').addEventListener('click', () => { showFind = false; document.getElementById('epFindBar').classList.remove('show'); });
+document.getElementById('findNext').addEventListener('click', () => doFind(1));
+document.getElementById('findPrev').addEventListener('click', () => doFind(-1));
+document.getElementById('replaceOne').addEventListener('click', doReplaceOne);
+document.getElementById('replaceAll').addEventListener('click', doReplaceAll);
+document.getElementById('findInput').addEventListener('input', () => { findMatches = []; findIndex = 0; doFind(0); });
+
+function toggleFind() {
+  showFind = !showFind;
+  document.getElementById('epFindBar').classList.toggle('show', showFind);
+  if (showFind) document.getElementById('findInput').focus();
+}
+
+function doFind(direction) {
+  const query = document.getElementById('findInput').value;
+  if (!query) { document.getElementById('findCount').textContent = ''; return; }
+  const text = epBody.innerHTML;
+  const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+  const matches = [...text.matchAll(re)];
+  document.getElementById('findCount').textContent = `${matches.length} found`;
+  if (!matches.length) return;
+  findMatches = matches;
+  findIndex = ((findIndex + direction) + matches.length) % matches.length;
+}
+
+function doReplaceOne() {
+  const q = document.getElementById('findInput').value;
+  const r = document.getElementById('replaceInput').value;
+  if (!q) return;
+  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'i');
+  epBody.innerHTML = epBody.innerHTML.replace(re, r);
+  markDirty(); updateStats();
+}
+
+function doReplaceAll() {
+  const q = document.getElementById('findInput').value;
+  const r = document.getElementById('replaceInput').value;
+  if (!q) return;
+  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+  const count = (epBody.innerHTML.match(re) || []).length;
+  epBody.innerHTML = epBody.innerHTML.replaceAll(re, r);
+  toast(`Replaced ${count} occurrence(s)`);
+  markDirty(); updateStats();
+}
+
+// ─── View modes ───────────────────────────────────────────────
+document.getElementById('tbFocus').addEventListener('click', () => document.body.classList.toggle('ep-focus'));
+document.getElementById('tbDark').addEventListener('click', () => {
+  document.body.classList.toggle('ep-dark');
+  document.getElementById('tbDark').classList.toggle('on');
+});
+document.getElementById('tbTypewriter').addEventListener('click', () => {
+  document.body.classList.toggle('typewriter-mode');
+  document.getElementById('tbTypewriter').classList.toggle('on');
+});
+document.getElementById('tbSplit').addEventListener('click', () => {
+  splitMode = !splitMode;
+  document.getElementById('tbSplit').classList.toggle('on', splitMode);
+  document.getElementById('epSplitPreview').style.display = splitMode ? 'block' : 'none';
+  document.getElementById('epMain').className = splitMode ? 'ep-main ep-split' : 'ep-main';
+  if (splitMode) updateSplitPreview();
+});
+
+function updateSplitPreview() {
+  document.getElementById('epSplitPreview').innerHTML = `
+    <h1 style="font-family:'Fraunces',serif;font-size:32px;font-weight:500;margin-bottom:14px;">${escapeHtml(epTitle.value || 'Untitled')}</h1>
+    ${epBody.innerHTML}
+  `;
+}
+
+// ─── Export / copy ────────────────────────────────────────────
+document.getElementById('copyHtmlBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(epBody.innerHTML);
+  toast('HTML copied');
+});
+document.getElementById('copyTextBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(epBody.innerText);
+  toast('Plain text copied');
+});
+
+function download(filename, content, type='text/plain') {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type }));
+  a.download = filename;
+  a.click();
+}
+
+document.getElementById('exportMdBtn').addEventListener('click', () => {
+  readFrontmatter();
+  const fm = window.MD.serializeArticleFile(frontmatter, epBody.innerHTML);
+  download((frontmatter.slug || 'article') + '.md', fm);
+});
+document.getElementById('exportTxtBtn').addEventListener('click', () => {
+  download((frontmatter.slug || 'article') + '.txt', (epTitle.value ? epTitle.value + '\n\n' : '') + epBody.innerText);
+});
+document.getElementById('exportHtmlBtn').addEventListener('click', () => {
+  const full = `<!doctype html><html><head><meta charset="UTF-8"><title>${escapeHtml(epTitle.value)}</title></head><body><h1>${escapeHtml(epTitle.value)}</h1>${epBody.innerHTML}</body></html>`;
+  download((frontmatter.slug || 'article') + '.html', full, 'text/html');
+});
+
+// ─── Word frequency analysis ──────────────────────────────────
+document.querySelectorAll('[data-ltab]').forEach(btn => {
+  if (btn.dataset.ltab) {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.ltab !== 'outline') return;
+      const words = (epBody.innerText || '').toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(w => w.length > 3);
+      const freq = {};
+      words.forEach(w => freq[w] = (freq[w]||0) + 1);
+      const top = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,10);
+      document.getElementById('wordAnalysis').innerHTML = top.length
+        ? top.map(([w,c]) => `<span style="display:flex;justify-content:space-between;"><strong>${escapeHtml(w)}</strong><span>${c}×</span></span>`).join('')
+        : 'Write more to see analysis.';
+    });
+  }
+});
+
+// ─── Duplicate ────────────────────────────────────────────────
+document.getElementById('tbDuplicate').addEventListener('click', async () => {
+  if (!currentPath) { toast('Save first, then duplicate.', 'error'); return; }
+  readFrontmatter();
+  const newFm = { ...frontmatter, title: frontmatter.title + ' (Copy)', slug: frontmatter.slug + '-copy-' + Date.now().toString().slice(-5), status: 'draft', publishedAt: '' };
+  try {
+    const result = await Articles.save(account.token, target.owner, target.repo, target.branch, { existingPath:null, existingSha:null, frontmatter:newFm, body:epBody.innerHTML, commitMessage: `Duplicate: ${newFm.title}` });
+    toast('Duplicate saved as draft');
+    location.href = `editor-pro.html?path=${encodeURIComponent(result.path)}`;
+  } catch(err) { toast(err.message || 'Could not duplicate.', 'error'); }
+});
+
+// ─── Revisions ────────────────────────────────────────────────
+document.getElementById('tbRevisions').addEventListener('click', async () => {
+  if (!currentPath) { toast('Save first to see revisions.', 'error'); return; }
+  showModal('revisionsModal');
+  const list = document.getElementById('revModalList');
+  list.innerHTML = '<div class="center-loading"><span class="spinner"></span> Loading...</div>';
+  try {
+    const commits = await window.GitHubAPI.getCommits(account.token, target.owner, target.repo, target.branch, currentPath, 20);
+    if (!commits.length) { list.innerHTML = '<p style="color:var(--ink-faint);font-size:13px;">No history yet.</p>'; return; }
+    list.innerHTML = commits.map((c,i) => `
+      <div class="rev-item">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;">${escapeHtml(c.message.split('\n')[0])}</div>
+          <div style="font-size:11.5px;color:var(--ink-faint);" class="mono">${c.sha.slice(0,7)} · ${escapeHtml(c.authorName)} · ${timeAgo(c.date)}</div>
+        </div>
+        ${i===0 ? '<span style="font-size:11px;color:var(--ink-faint);">Current</span>' : `<button class="btn btn-ghost btn-sm" data-rev="${c.sha}">Restore</button>`}
+      </div>`).join('');
+    list.querySelectorAll('[data-rev]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Load this version into the editor? Commit to save it.')) return;
+        try {
+          const old = await window.GitHubAPI.getFileAtRef(account.token, target.owner, target.repo, currentPath, btn.dataset.rev);
+          if (!old) return;
+          const parsed = window.MD.parseArticleFile(old.content);
+          frontmatter = parsed.frontmatter;
+          writeFrontmatter();
+          epBody.innerHTML = parsed.body;
+          updateStats(); updateOutline(); markDirty();
+          closeModal('revisionsModal');
+          toast('Revision loaded — commit to save');
+        } catch(err) { toast(err.message || 'Could not restore.', 'error'); }
+      });
+    });
+  } catch(err) { list.innerHTML = `<p style="color:var(--rust);font-size:13px;">${escapeHtml(err.message)}</p>`; }
+});
+
+// ─── Shortcuts modal ─────────────────────────────────────────
+document.getElementById('tbShortcuts').addEventListener('click', () => showModal('shortcutsModal'));
+
+// ─── Modal helpers ────────────────────────────────────────────
+function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+// Inject modals into body
+document.body.insertAdjacentHTML('beforeend', `
+  <div class="ep-modal-overlay" id="revisionsModal" style="display:none;" onclick="if(event.target===this)closeModal('revisionsModal')">
+    <div class="ep-modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 class="font-display">Revision history</h3>
+        <button onclick="closeModal('revisionsModal')" style="background:none;border:none;cursor:pointer;color:var(--ink-faint);font-size:18px;">✕</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink-faint);margin:0 0 12px;">Every commit to this file pulled from git. Restoring loads it into the editor — commit to save.</p>
+      <div id="revModalList"></div>
+    </div>
+  </div>
+  <div class="ep-modal-overlay" id="shortcutsModal" style="display:none;" onclick="if(event.target===this)closeModal('shortcutsModal')">
+    <div class="ep-modal">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 class="font-display">Keyboard shortcuts</h3>
+        <button onclick="closeModal('shortcutsModal')" style="background:none;border:none;cursor:pointer;color:var(--ink-faint);font-size:18px;">✕</button>
+      </div>
+      ${[
+        ['Commit to GitHub','Ctrl/Cmd + S'],['Bold','Ctrl/Cmd + B'],['Italic','Ctrl/Cmd + I'],
+        ['Underline','Ctrl/Cmd + U'],['Link','Ctrl/Cmd + K'],['Find & replace','Ctrl/Cmd + F'],
+        ['Undo','Ctrl/Cmd + Z'],['Redo','Ctrl/Cmd + Y'],['Focus mode','Ctrl/Cmd + Shift + F'],
+        ['Heading 1','Ctrl/Cmd + 1'],['Heading 2','Ctrl/Cmd + 2'],['Heading 3','Ctrl/Cmd + 3'],
+        ['Code block','Ctrl/Cmd + Shift + C'],['Quote','Ctrl/Cmd + Shift + Q'],
+      ].map(([l,k])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--hairline);font-size:13px;"><span>${l}</span><kbd style="background:var(--paper-dim);border:1px solid var(--hairline);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:11.5px;">${k}</kbd></div>`).join('')}
+    </div>
+  </div>
+`);
+
+// ─── Keyboard shortcuts ───────────────────────────────────────
+function handleEditorKey(e) {
+  const mod = e.ctrlKey || e.metaKey;
+  if (!mod) return;
+  const k = e.key.toLowerCase();
+  if (k === 'b') { e.preventDefault(); cmd('bold'); }
+  else if (k === 'i') { e.preventDefault(); cmd('italic'); }
+  else if (k === 'u') { e.preventDefault(); cmd('underline'); }
+  else if (k === 'k') { e.preventDefault(); const url = prompt('Link URL:'); if (url) cmd('createLink', url); }
+  else if (k === 'f') { e.preventDefault(); toggleFind(); }
+  else if (k === 's') { e.preventDefault(); document.getElementById('commitBtn').click(); }
+  else if (k === 'y') { e.preventDefault(); cmd('redo'); }
+  else if (k === '1') { e.preventDefault(); cmd('formatBlock','H1'); }
+  else if (k === '2') { e.preventDefault(); cmd('formatBlock','H2'); }
+  else if (k === '3') { e.preventDefault(); cmd('formatBlock','H3'); }
+  else if (k === '4') { e.preventDefault(); cmd('formatBlock','H4'); }
+  else if (k === 'c' && e.shiftKey) { e.preventDefault(); cmd('formatBlock','PRE'); }
+  else if (k === 'q' && e.shiftKey) { e.preventDefault(); cmd('formatBlock','BLOCKQUOTE'); }
+  else if (k === 'f' && e.shiftKey) { e.preventDefault(); document.body.classList.toggle('ep-focus'); }
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click', () => {
+  blockDropMenu.style.display = 'none';
+  calloutDropMenu.style.display = 'none';
+  embedDropMenu.style.display = 'none';
+});
+
+// ─── Autosave to localStorage ─────────────────────────────────
+function autosave() {
+  if (!isDirty) return;
+  try {
+    localStorage.setItem(autosaveKey, JSON.stringify({
+      title: epTitle.value,
+      body: epBody.innerHTML,
+      savedAt: new Date().toISOString(),
+    }));
+    document.getElementById('autosaveStatus').textContent = 'Autosaved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('autosaveStatus').className = 'ep-autosave saved';
+    isDirty = false;
+  } catch(e) { /* localStorage full or unavailable */ }
+}
+setInterval(autosave, 30000);
+
+// ─── Recover from autosave ────────────────────────────────────
+function checkAutosave() {
+  if (existingPath) return; // Only for new articles
+  const saved = localStorage.getItem(autosaveKey);
+  if (!saved) return;
+  try {
+    const data = JSON.parse(saved);
+    if (!data.body && !data.title) return;
+    if (confirm(`Recover unsaved draft "${data.title || 'Untitled'}" from ${timeAgo(data.savedAt)}?`)) {
+      epTitle.value = data.title || '';
+      autoGrow(epTitle);
+      epBody.innerHTML = data.body || '';
+      frontmatter.title = epTitle.value;
+      frontmatter.slug = window.MD.slugify(epTitle.value);
+      document.getElementById('fmSlug').value = frontmatter.slug;
+      updateSlugDisplay();
+      updateStats(); updateOutline();
+      toast('Draft recovered');
+    } else {
+      localStorage.removeItem(autosaveKey);
+    }
+  } catch(e) { /* corrupt data */ }
+}
+
+// ─── Commit to GitHub ─────────────────────────────────────────
+function setSaving(state, msg) {
+  const drone = document.getElementById('epDrone');
+  drone.classList.toggle('active', state === 'saving');
+  document.getElementById('autosaveStatus').textContent = msg || (state === 'saved' ? 'Saved to GitHub' : state === 'error' ? 'Save failed' : 'Ready');
+  document.getElementById('autosaveStatus').className = 'ep-autosave ' + (state === 'saved' ? 'saved' : state === 'error' ? '' : '');
+}
+
+document.getElementById('commitBtn').addEventListener('click', async () => {
+  readFrontmatter();
+  if (!frontmatter.title.trim()) { toast('Add a title first.', 'error'); return; }
+  if (!frontmatter.slug.trim()) { toast('Add a slug first.', 'error'); return; }
+  const btn = document.getElementById('commitBtn');
+  btn.disabled = true;
+  setSaving('saving', 'Committing…');
+  try {
+    const result = await Articles.save(account.token, target.owner, target.repo, target.branch, {
+      existingPath: currentPath,
+      existingSha: currentSha,
+      frontmatter,
+      body: epBody.innerHTML,
+    });
+    currentPath = result.path;
+    currentSha = result.sha;
+    isDirty = false;
+    localStorage.removeItem(autosaveKey);
+    setSaving('saved');
+    toast('Committed to GitHub ✓');
+    if (!existingPath) {
+      history.replaceState(null, '', `editor-pro.html?path=${encodeURIComponent(currentPath)}`);
+      autosaveKey = 'ep-autosave-' + currentPath;
+    }
+    setTimeout(() => setSaving('idle', 'Ready'), 3000);
+  } catch(err) {
+    setSaving('error', err.message || 'Save failed');
+    toast(err.message || 'Could not save.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// ─── Load existing article ────────────────────────────────────
+async function loadArticle(path) {
+  try {
+    const article = await Articles.load(account.token, target.owner, target.repo, target.branch, path);
+    if (!article) { toast('Article not found.', 'error'); return; }
+    frontmatter = article.frontmatter;
+    currentPath = article.path;
+    currentSha = article.sha;
+    slugTouched = true;
+    writeFrontmatter();
+    epBody.innerHTML = article.body;
+    updateStats(); updateOutline();
+    autosaveKey = 'ep-autosave-' + path;
+  } catch(err) {
+    toast(err.message || 'Could not load article.', 'error');
+  }
+}
+
+// ─── Init ─────────────────────────────────────────────────────
+if (existingPath) {
+  loadArticle(existingPath);
+} else {
+  writeFrontmatter();
+  checkAutosave();
+}
+updateStats();
+
+// Add a link in the CMS nav to reach editor-pro from articles list
+</script>
+</body>
+</html>

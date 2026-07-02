@@ -47,6 +47,7 @@
 
 <main class="front-page" id="top">
   <div id="loadingState" class="loading-state">Loading the latest issue…</div>
+  <div id="onPageDebug" style="background:#222; color:#0f0; padding:14px; font-family:monospace; font-size:12px; white-space:pre-wrap; border-radius:6px; margin-bottom:16px; display:none;"></div>
   <div id="frontContent" style="display:none;"></div>
 </main>
 
@@ -301,8 +302,18 @@
     }
   }
 
-  Promise.all([PublicContent.listPublished().catch(() => []), loadSiteConfig()])
+  Promise.all([
+    PublicContent.listPublished().catch((err) => { console.error('listPublished failed:', err); window.__ragaDebugError = err; return []; }),
+    loadSiteConfig()
+  ])
     .then(([articles, siteConfig]) => {
+      const dbg = document.getElementById('onPageDebug');
+      dbg.style.display = 'block';
+      dbg.textContent =
+        'Articles found: ' + articles.length + '\n' +
+        'Site config loaded: ' + (siteConfig ? 'yes' : 'no') + '\n' +
+        (window.__ragaDebugError ? ('Error: ' + (window.__ragaDebugError.message || String(window.__ragaDebugError))) : 'No error caught') + '\n' +
+        'SITE_REPO: ' + JSON.stringify(window.SITE_REPO);
       if (siteConfig) applySiteConfig(siteConfig);
       renderFrontPage(articles, siteConfig ? siteConfig.homepage : null);
     });

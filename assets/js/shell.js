@@ -20,6 +20,7 @@ const NAV_SECTIONS = [
     label: 'Content',
     items: [
       { key: 'articles', href: 'articles.html', label: 'Articles', icon: 'M4 4h16v16H4V4Zm3 4h10M7 12h10M7 16h6' },
+      { key: 'editor-pro', href: 'editor-pro.html', label: 'Editor Pro ✦', icon: 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z' },
       { key: 'media', href: 'media.html', label: 'Media Library', icon: 'M4 5h16v14H4V5Zm3 10 4-5 3 4 2-2 4 3' },
       { key: 'categories', href: 'categories.html', label: 'Categories & Tags', icon: 'M4 5h7l9 9-7 7-9-9V5Zm3 3h.01' },
     ],
