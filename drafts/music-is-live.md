@@ -1,5 +1,5 @@
 ---
-title: Music is live
+title: Chris Isaak
 slug: music-is-live
 status: draft
 excerpt: ''
@@ -9,7 +9,7 @@ categories: []
 tags: []
 publishedAt: ''
 scheduledFor: ''
-updatedAt: '2026-07-02T13:40:09.446Z'
+updatedAt: '2026-07-02T13:45:23.015Z'
 featured: false
 pinned: false
 passwordProtected: false
@@ -20,4 +20,4 @@ seo:
   noindex: false
 ---
 
-<div class="drop-cap"><p>ead paragraph with a large drop cap on the first letter of this sentence.</p></div><figure><img class="img-full" src="https://raw.githubusercontent.com/theragajournal/theragajournal/main/media/1782999515570-39222.jpg" alt="39222.jpg"><span style="color: rgb(107, 102, 96); font-size: 13px; font-style: italic; text-align: center;">&nbsp;pg</span></figure><p>হ্যালো what the military operation is also and how much it will load the instrument in the United kingdom to get to the modern CtrlHD in your browser and it should proper video</p><p>&nbsp;<span style="color: rgb(28, 27, 25); font-size: 13px; font-weight: 600;">Wicked Game - Chris Isaak _ 8D Music(MP3_160K)</span></p><p><span style="color: rgb(28, 27, 25); font-size: 13px; font-weight: 600;"><br></span></p><p><span style="color: rgb(28, 27, 25); font-size: 13px; font-weight: 600;"><br></span></p><p><span style="color: rgb(28, 27, 25); font-size: 13px; font-weight: 600;"><br></span></p><p><span style="color: rgb(28, 27, 25); font-size: 13px; font-weight: 600;"><br></span></p><p><span style="color: rgb(28, 27, 25); font-size: 13px; font-weight: 600;"><br></span></p><p><span style="color: rgb(28, 27, 25); font-size: 13px; font-weight: 600;"><br></span></p><p><span style="color: rgb(28, 27, 25); font-size: 13px; font-weight: 600;"><br></span></p><div class="audio-block"><audio controls="" src="https://raw.githubusercontent.com/theragajournal/theragajournal/main/media/1782999581780-wicked-game---chris-isaak-_-8d-music(mp3_160k).mp3"></audio></div><p><br></p>
+<div class="drop-cap"><p>Chris Isaak is a highly acclaimed American singer, songwriter, and actor.&nbsp;&nbsp;</p><p>​He is renowned for his signature 1950s-style rockabilly revivalist sound.&nbsp;&nbsp;</p><p>​His musical trademark features a wide vocal range and reverb-laden guitars.&nbsp;&nbsp;</p><p>​Isaak formed his longtime backing band, Silvertone, early in his career.</p><p>​He achieved massive international stardom with his 1989 hit song, "Wicked Game."&nbsp;&nbsp;</p><p>​Other major hit singles include "Blue Hotel" and "Baby Did a Bad Bad Thing."&nbsp;&nbsp;</p><p>​Over four decades, Isaak has released more than a dozen acclaimed studio albums.&nbsp;&nbsp;</p><p>​Film director David Lynch frequently featured Isaak's cinematic music in his movies.&nbsp;&nbsp;</p><p>​As an actor, he appeared in films like The Silence of the Lambs.&nbsp;&nbsp;</p><p>​He also starred in his own television comedy series, The Chris Isaak Show&nbsp;</p><p><br></p></div>
