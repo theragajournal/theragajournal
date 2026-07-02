@@ -47,7 +47,6 @@
 
 <main class="front-page" id="top">
   <div id="loadingState" class="loading-state">Loading the latest issue…</div>
-  <div id="onPageDebug" style="background:#222; color:#0f0; padding:14px; font-family:monospace; font-size:12px; white-space:pre-wrap; border-radius:6px; margin-bottom:16px; display:none;"></div>
   <div id="frontContent" style="display:none;"></div>
 </main>
 
@@ -87,27 +86,12 @@
       <h5>Elsewhere</h5>
       <ul>
         <li><a href="#" id="githubLink">GitHub</a></li>
-<li>
-    <a href="https://www.instagram.com/theragajournal?igsh=MnozcWhubWxsNnVk" target="_blank">Instagram</a>
-</li>
-
-<li>
-    <a href="https://www.threads.com/@theragajournal" target="_blank">Threads</a>
-</li>
-
-<li>
-    <a href="https://www.facebook.com/share/1BL6uUxMm5/" target="_blank">Facebook</a>
-</li>
-
-<li>
-    <a href="https://x.com/TheRagaJournal" target="_blank">X</a>
-</li>
       </ul>
     </div>
   </div>
   <div class="footer-bottom">
     <span>© <span id="yearSpan"></span> The Raga Journal.</span>
-    <span>Published With Love.</span>
+    <span>Published with The Raga Journal CMS.</span>
   </div>
 </footer>
 
@@ -302,18 +286,8 @@
     }
   }
 
-  Promise.all([
-    PublicContent.listPublished().catch((err) => { console.error('listPublished failed:', err); window.__ragaDebugError = err; return []; }),
-    loadSiteConfig()
-  ])
+  Promise.all([PublicContent.listPublished().catch(() => []), loadSiteConfig()])
     .then(([articles, siteConfig]) => {
-      const dbg = document.getElementById('onPageDebug');
-      dbg.style.display = 'block';
-      dbg.textContent =
-        'Articles found: ' + articles.length + '\n' +
-        'Site config loaded: ' + (siteConfig ? 'yes' : 'no') + '\n' +
-        (window.__ragaDebugError ? ('Error: ' + (window.__ragaDebugError.message || String(window.__ragaDebugError))) : 'No error caught') + '\n' +
-        'SITE_REPO: ' + JSON.stringify(window.SITE_REPO);
       if (siteConfig) applySiteConfig(siteConfig);
       renderFrontPage(articles, siteConfig ? siteConfig.homepage : null);
     });
