@@ -2,7 +2,7 @@
 title: Chris Isaak
 slug: music-is-live
 status: published
-excerpt: 'Chris lsaak well known for
+excerpt: ''
 coverImage: ''
 authorId: Pranay Roy
 categories:
@@ -11,7 +11,7 @@ tags:
   - Interviews
 publishedAt: ''
 scheduledFor: ''
-updatedAt: '2026-07-02T13:51:58.156Z'
+updatedAt: '2026-07-03T09:40:28.213Z'
 featured: false
 pinned: false
 passwordProtected: false
